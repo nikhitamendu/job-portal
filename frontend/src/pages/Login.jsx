@@ -1,16 +1,17 @@
 import { useState } from "react";
-import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -18,49 +19,87 @@ export default function Login() {
 
     try {
       setLoading(true);
-
-      const res = await api.post("auth/login", { email, password });
-
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login successfull")
+      await login(email, password);
+      toast.success("Welcome back!");
       navigate("/profile");
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        "Something went wrong. Please try again.";
-      setError(msg);
+      setError(
+        err.response?.data?.message || "Invalid email or password"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center mt-16">
-      <div className="bg-white p-6 rounded shadow w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-gray-200 p-6">
 
-        <form onSubmit={submit}>
-          <input
-            className="border p-2 w-full mb-3 rounded"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        {/* HEADER */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Welcome Back 👋
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Login to continue to JobPortal
+          </p>
+        </div>
 
-          <input
-            className="border p-2 w-full mb-3 rounded"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        {/* FORM */}
+        <form onSubmit={submit} className="space-y-4">
+          
+          {/* EMAIL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          {/* PASSWORD WITH TOGGLE */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full border rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700"
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600 text-center">
+              {error}
+            </p>
+          )}
 
           <button
+            type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded text-white ${
+            className={`w-full py-2 rounded-md font-medium text-white transition ${
               loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
@@ -70,26 +109,25 @@ export default function Login() {
           </button>
         </form>
 
-        {error && (
-          <p className="text-red-600 mt-3 text-center text-sm">{error}</p>
-        )}
+        {/* LINKS */}
+        <div className="text-center mt-5 text-sm">
+          <Link
+            to="/forgot-password"
+            className="text-blue-600 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
-        <p className="text-center mt-3 text-sm">
-  <Link
-    to="/forgot-password"
-    className="text-blue-600 hover:underline"
-  >
-    Forgot password?
-  </Link>
-</p>
-
-<p className="text-center mt-4 text-sm">
-  Don’t have an account?{" "}
-  <Link to="/register" className="text-blue-600 hover:underline">
-    Register
-  </Link>
-</p>
-
+        <div className="text-center mt-4 text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-blue-600 hover:underline font-medium"
+          >
+            Register
+          </Link>
+        </div>
       </div>
     </div>
   );

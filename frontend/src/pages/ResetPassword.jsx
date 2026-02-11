@@ -1,79 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import API from "../api/axios";
+import { toast } from "react-toastify";
+import api from "../services/api";
 
 export default function ResetPassword() {
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const email = location.state?.email;
 
-    const email = location.state?.email;
+  useEffect(() => {
+    if (!email) navigate("/forgot-password");
+  }, [email, navigate]);
 
-    if (!email) {
-        navigate("/forgot-password");
+  const resetPassword = async (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
     }
 
-    const resetPassword = async (e) => {
-        e.preventDefault();
+    try {
+      setLoading(true);
+      await api.post("/auth/reset-password", { email, password });
+      toast.success("Password reset successful");
+      navigate("/login");
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to reset password"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const strongPasswordRegex =
-            /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        
+        <h2 className="text-2xl font-bold text-center mb-4">
+          Set New Password
+        </h2>
 
-        if (!strongPasswordRegex.test(password)) {
-            alert(
-                "Password must contain at least 1 uppercase letter, 1 number, 1 special character, and be at least 6 characters long"
-            );
-            return;
-        }
+        <form onSubmit={resetPassword} className="space-y-4">
+          <input
+            type="password"
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
+          <input
+            type="password"
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
-        try {
-            await API.post("auth/reset-password", {
-                email,
-                password
-            });
-
-            alert("Password reset successful");
-            navigate("/login");
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to reset password");
-        }
-    };
-
-    return (
-        <div className="flex justify-center mt-16">
-            <form
-                onSubmit={resetPassword}
-                className="bg-white p-6 rounded shadow w-96"
-            >
-                <h2 className="text-xl font-bold mb-4 text-center">
-                    Reset Password
-                </h2>
-
-                <input
-                    type="password"
-                    placeholder="New password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2 w-full mb-3 rounded"
-                    required
-                />
-
-                <input
-                    type="password"
-                    placeholder="Confirm password"
-                    className="border p-2 w-full mb-3 rounded"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                />
-
-                <button className="bg-blue-600 text-white w-full py-2 rounded">
-                    Reset Password
-                </button>
-            </form>
-        </div>
-    );
+          <button
+            disabled={loading}
+            className={`w-full py-2 rounded-md font-medium text-white ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {loading ? "Resetting..." : "Reset Password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

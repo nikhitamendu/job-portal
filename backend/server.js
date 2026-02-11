@@ -31,7 +31,7 @@ app.use("/api/protected", require("./routes/protectedRoutes"));
 ======================= */
 async function startServer() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI);   //we used async await because to connect with database it may take some time and we want to start the server only after the database is connected successfully.
     console.log("MongoDB connected");
 
     const PORT = process.env.PORT || 5000;

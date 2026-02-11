@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       default: false
     },
     verificationToken: {
-      type: String
+      type: String  //  Token for email verification . It will be removed after verification
     },
     resetOtp: Number,
     resetOtpExpires: Date,

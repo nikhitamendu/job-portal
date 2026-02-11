@@ -1,125 +1,114 @@
-import { useState,useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-import api from "../api/axios";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../services/api";
 
 export default function VerifyReset() {
-    const [otp, setOtp] = useState("");
-    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(600);
+  const [loading, setLoading] = useState(false);
 
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const email = location.state?.email;
 
-    const email = location.state?.email;
+  useEffect(() => {
+    if (!email) navigate("/forgot-password");
+  }, [email, navigate]);
 
-    if (!email) {
-        navigate("/forgot-password");
-    }
-
-    //countdown timer
-    useEffect(() => {
+  useEffect(() => {
     if (timeLeft <= 0) return;
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-
-  //format mm:ss
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
-  
+  const verifyOtp = async (e) => {
+    e.preventDefault();
 
-    const verifyOtp = async (e) => {
-        e.preventDefault();
+    if (timeLeft === 0) {
+      toast.error("OTP expired. Please resend.");
+      return;
+    }
 
-        if (timeLeft === 0) {
-  alert("OTP has expired. Please resend OTP.");
-  return;
-}
+    try {
+      setLoading(true);
+      await api.post("/auth/verify-otp", { email, otp });
+      toast.success("OTP verified");
+      navigate("/reset-password", { state: { email } });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        try {
-            setLoading(true);
-            await api.post("auth/verify-otp", { email, otp });
-            navigate("/reset-password", { state: { email } });
-        } catch (err) {
-            alert(err.response?.data?.message || "Invalid OTP");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const resendOtp = async () => {
+    try {
+      await api.post("/auth/resend-otp", { email });
+      toast.success("New OTP sent");
+      setTimeLeft(600);
+    } catch {
+      toast.error("Failed to resend OTP");
+    }
+  };
 
-    // 🔁 RESEND OTP
-    const resendOtp = async () => {
-        try {
-            await api.post("/resend-otp", { email });
-            alert("New OTP sent to your email");
-            setTimeLeft(600);
-        } catch (err) {
-            alert("Failed to resend OTP");
-        }
-    };
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        
+        <h2 className="text-2xl font-bold text-center mb-4">
+          Verify OTP
+        </h2>
 
-    return (
-        <div className="flex justify-center mt-16">
-            <form
-                onSubmit={verifyOtp}
-                className="bg-white p-6 rounded shadow w-96"
-            >
-                <h2 className="text-xl font-bold mb-4 text-center">
-                    Verify OTP
-                </h2>
+        <form onSubmit={verifyOtp} className="space-y-4">
+          <input
+            type="number"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            required
+            className="w-full border rounded-md px-3 py-2 text-center tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
-                <input
-                    type="number"
-                    placeholder="Enter OTP"
-                    className="border p-2 w-full mb-3 rounded"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    required
-                />
-     {/*Timer*/}
-                 <p className="text-center text-sm text-gray-600 mb-3">
-          OTP expires in <b>{formatTime(timeLeft)}</b>
-        </p>
-               <button
-  disabled={loading || timeLeft === 0}
-  className={`w-full py-2 rounded text-white ${
-    loading || timeLeft === 0
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-blue-600 hover:bg-blue-700"
-  }`}
->
-  {timeLeft === 0 ? "OTP Expired" : "Verify OTP"}
-</button>
+          <p className="text-center text-sm text-gray-500">
+            OTP expires in <b>{formatTime(timeLeft)}</b>
+          </p>
 
+          <button
+            disabled={loading || timeLeft === 0}
+            className={`w-full py-2 rounded-md font-medium text-white ${
+              loading || timeLeft === 0
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            Verify OTP
+          </button>
+        </form>
 
-                {/* 🔁 RESEND LINK */}
-                <p
-                    className="text-center text-sm mt-4 text-blue-600 cursor-pointer"
-                    onClick={resendOtp}
-                >
-                    Resend OTP
-                </p>
- {/* back to login link */}
-<p className="text-center text-sm mt-3">
-  <a
-    href="/login"
-    className="text-gray-600 hover:text-blue-600 hover:underline"
-  >
-    Back to login
-  </a>
-</p>
-
-            </form>
+        <div className="text-center mt-4 text-sm">
+          <button
+            onClick={resendOtp}
+            className="text-blue-600 hover:underline"
+          >
+            Resend OTP
+          </button>
         </div>
-    );
+
+        <p className="text-center text-sm mt-4">
+          <Link to="/login" className="text-gray-600 hover:underline">
+            Back to login
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
 }

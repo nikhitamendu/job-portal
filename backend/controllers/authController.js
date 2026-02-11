@@ -236,20 +236,20 @@ exports.login = async (req, res) => {
    REFRESH TOKEN
 ===================================================== */
 exports.refreshToken = async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies.refreshToken;  //we stored refresh token in cookies during login
 
   if (!token) {
     return res.status(401).json({ message: "No refresh token" });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.id);
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);  // if all are valid it returns the decoded payload 
+    const user = await User.findById(decoded.id);//just token is valid doesnt mean teh user still exists ,may be user was deleted //with out db check deleted user would still ger access token   //
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-
+//after checking
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -261,6 +261,7 @@ exports.refreshToken = async (req, res) => {
     return res.status(403).json({ message: "Invalid refresh token" });
   }
 };
+
 
 /* =====================================================
    LOGOUT
@@ -429,7 +430,7 @@ exports.resendOtp = async (req, res) => {
 
 exports.me = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password");  //you fetch the logged in user from databse using tge id from token and excludes tg=he passwird field from the response  // req.user comes from suyh middle ware
     return res.json({ user });
   } catch (err) {
     return res.status(401).json({ message: "Not authenticated" });
