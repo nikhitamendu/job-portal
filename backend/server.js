@@ -5,6 +5,9 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
+const userRoutes = require("./routes/userRoutes");
+const { GridFSBucket } = require("mongodb");
+
 
 /* =======================
    GLOBAL MIDDLEWARE
@@ -26,6 +29,9 @@ app.use(cookieParser());
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/protected", require("./routes/protectedRoutes"));
 
+app.use("/api/users", userRoutes);
+
+
 /* =======================
    SERVER START
 ======================= */
@@ -42,5 +48,12 @@ async function startServer() {
     console.error("Server startup failed:", error);
   }
 }
+mongoose.connection.once("open", () => {
+  const bucket = new GridFSBucket(mongoose.connection.db, {
+    bucketName: "uploads"
+  });
+
+  app.locals.bucket = bucket;
+});
 
 startServer();
