@@ -106,7 +106,35 @@ const userSchema = new mongoose.Schema(
 
     profilePicFileId: {
       type: mongoose.Schema.Types.ObjectId
-    }
+    },
+    gender: {
+  type: String,
+  enum: ["Male", "Female", "Other"]
+},
+
+dob: {
+  type: Date
+},
+
+jobTitle: {
+  type: String,
+  trim: true
+},
+
+city: {
+  type: String,
+  trim: true
+},
+
+country: {
+  type: String,
+  trim: true
+},
+profilePicFileId: {
+  type: mongoose.Schema.Types.ObjectId,
+  default: null
+},
+
     
   },
   { timestamps: true }

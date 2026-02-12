@@ -1,34 +1,52 @@
 const User = require("../models/User");
 
-/* ================= PROFILE COMPLETION ================= */
+/* =====================================================
+   PROFILE COMPLETION CALCULATION
+===================================================== */
 
 const calculateCompletion = (user) => {
   const fields = [
     user.phone && user.phone.trim() !== "",
-    user.location && user.location.trim() !== "",
+    user.city && user.city.trim() !== "",
+    user.country && user.country.trim() !== "",
+    user.gender,
+    user.jobTitle && user.jobTitle.trim() !== "",
     user.bio && user.bio.trim() !== "",
     user.skills && user.skills.length > 0,
     user.experience && user.experience.length > 0,
     user.education && user.education.length > 0,
     user.linkedin && user.linkedin.trim() !== "",
     user.portfolio && user.portfolio.trim() !== "",
-    user.resumeFileId ? true : false
+    user.resumeFileId ? true : false,
+    user.profilePicFileId ? true : false
   ];
 
-  const filled = fields.filter(Boolean).length;
-  return Math.round((filled / fields.length) * 100);
+  const filledFields = fields.filter(Boolean).length;
+  const totalFields = fields.length;
+
+  return Math.round((filledFields / totalFields) * 100);
 };
 
-/* ================= GET PROFILE ================= */
+
+/* =====================================================
+   GET PROFILE
+===================================================== */
 
 exports.getProfile = async (req, res) => {
   try {
-    // 🔥 ALWAYS fetch fresh user from DB
+    // Always fetch fresh user from DB
     const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const completion = calculateCompletion(user);
 
-    res.json({ user, completion });
+    res.json({
+      user,
+      completion
+    });
 
   } catch (error) {
     console.error("GET PROFILE ERROR:", error);
@@ -36,7 +54,10 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-/* ================= UPDATE PROFILE ================= */
+
+/* =====================================================
+   UPDATE PROFILE
+===================================================== */
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -48,23 +69,36 @@ exports.updateProfile = async (req, res) => {
 
     const {
       phone,
-      location,
       bio,
       skills,
       experience,
       education,
       linkedin,
-      portfolio
+      portfolio,
+      gender,
+      jobTitle,
+      city,
+      country
     } = req.body;
 
+    // Basic Fields
     if (phone !== undefined) user.phone = phone;
-    if (location !== undefined) user.location = location;
     if (bio !== undefined) user.bio = bio;
+
+    // Professional Fields
     if (skills !== undefined) user.skills = skills;
     if (experience !== undefined) user.experience = experience;
     if (education !== undefined) user.education = education;
+
+    // Links
     if (linkedin !== undefined) user.linkedin = linkedin;
     if (portfolio !== undefined) user.portfolio = portfolio;
+
+    // New Identity Fields
+    if (gender !== undefined) user.gender = gender;
+    if (jobTitle !== undefined) user.jobTitle = jobTitle;
+    if (city !== undefined) user.city = city;
+    if (country !== undefined) user.country = country;
 
     await user.save();
 

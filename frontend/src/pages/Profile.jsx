@@ -61,6 +61,28 @@ export default function Profile() {
     const updated = profile[field].filter((_, i) => i !== index);
     await updateProfile({ [field]: updated });
   };
+  /* ================= PROFILE PICTURE ================= */
+
+const handleProfilePicUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("profilePic", file);
+
+  await axios.post("/users/upload-profile-pic", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+
+  await fetchProfile();
+  e.target.value = null;
+};
+
+const handleDeleteProfilePic = async () => {
+  await axios.delete("/users/delete-profile-pic");
+  await fetchProfile();
+};
+
 
   /* ================= UI ================= */
 
@@ -85,20 +107,54 @@ export default function Profile() {
         <div className="grid md:grid-cols-3 gap-6">
 
           {/* LEFT */}
-          <div className="bg-white rounded-xl border p-6 text-center">
-            <div className="w-24 h-24 mx-auto rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-              {profile.name?.[0] || "U"}
-            </div>
-            <h2 className="mt-4 font-bold text-lg">{profile.name}</h2>
-            <p className="text-gray-500 text-sm">{profile.role}</p>
+        {/* LEFT */}
+<div className="bg-white rounded-xl border p-6 text-center">
 
-            <button
-              onClick={() => setEditBasic(true)}
-              className="mt-4 w-full bg-blue-600 text-white py-2 rounded"
-            >
-              Edit Basic Info
-            </button>
-          </div>
+  <div className="relative w-24 h-24 mx-auto">
+    {profile.profilePicFileId ? (
+      <img
+        src={`http://localhost:5000/api/users/file/${profile.profilePicFileId}`}
+        alt="Profile"
+        className="w-24 h-24 rounded-full object-cover border"
+      />
+    ) : (
+      <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+        {profile.name?.[0] || "U"}
+      </div>
+    )}
+
+    <label className="absolute bottom-0 right-0 bg-white border rounded-full p-1 cursor-pointer text-xs shadow">
+      ✎
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleProfilePicUpload}
+        className="hidden"
+      />
+    </label>
+  </div>
+
+  {profile.profilePicFileId && (
+    <button
+      onClick={handleDeleteProfilePic}
+      className="mt-2 text-red-600 text-sm"
+    >
+      Remove Photo
+    </button>
+  )}
+
+  <h2 className="mt-4 font-bold text-lg">{profile.name}</h2>
+  <p className="text-gray-500 text-sm">{profile.role}</p>
+
+  <button
+    onClick={() => setEditBasic(true)}
+    className="mt-4 w-full bg-blue-600 text-white py-2 rounded"
+  >
+    Edit Basic Info
+  </button>
+
+</div>
+
 
           {/* RIGHT */}
           <div className="md:col-span-2 space-y-6">
@@ -190,7 +246,7 @@ export default function Profile() {
 
         <div className="space-x-4 text-sm">
           <a
-            href={`http://localhost:5000/api/users/resume/${profile.resumeFileId}`}
+href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
             target="_blank"
             rel="noreferrer"
             className="text-blue-600 underline"
