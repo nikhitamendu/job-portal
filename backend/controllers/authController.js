@@ -8,9 +8,75 @@ const sendEmail = require("../utils/sendEmail");
 /* =====================================================
    REGISTER (SEND EMAIL, DO NOT CREATE USER YET)
 ===================================================== */
+// exports.register = async (req, res) => {
+//   try {
+//     let { name, email, password } = req.body;
+
+//     if (!name || !email || !password) {
+//       return res.status(400).json({ message: "All fields are required" });
+//     }
+
+//     name = name.trim();
+//     email = email.toLowerCase().trim();
+
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ message: "Invalid email address" });
+//     }
+
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: "Email already registered" });
+//     }
+
+//     const strongPassword =
+//       /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+
+//     if (!strongPassword.test(password)) {
+//       return res.status(400).json({
+//         message:
+//           "Password must contain at least 1 uppercase letter, 1 number, and 1 special character"
+//       });
+//     }
+
+//     await TempUser.deleteOne({ email });
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const token = crypto.randomBytes(32).toString("hex");
+
+
+//     await TempUser.create({
+//       name,
+//       email,
+//       password: hashedPassword,
+//       token
+//     });
+
+//     const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
+
+
+
+//     await sendEmail(
+//       email,
+//       "Verify your email - Job Portal",
+//       `
+//         <h2>Email Verification</h2>
+//         <p>Click the link below to complete your registration:</p>
+//         <a href="${verifyLink}">Verify Email</a>
+//       `
+//     );
+
+//     return res.status(200).json({
+//       message: "Verification email sent. Please verify to complete registration."
+//     });
+//   } catch (error) {
+//     console.error("REGISTER ERROR:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
 exports.register = async (req, res) => {
   try {
-    let { name, email, password } = req.body;
+    let { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -18,6 +84,9 @@ exports.register = async (req, res) => {
 
     name = name.trim();
     email = email.toLowerCase().trim();
+
+    const allowedRoles = ["user", "recruiter"];
+    const selectedRole = allowedRoles.includes(role) ? role : "user";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -44,17 +113,15 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const token = crypto.randomBytes(32).toString("hex");
 
-
     await TempUser.create({
       name,
       email,
       password: hashedPassword,
-      token
+      token,
+      role: selectedRole   // 🔥 IMPORTANT
     });
 
     const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
-
-
 
     await sendEmail(
       email,
@@ -69,6 +136,7 @@ exports.register = async (req, res) => {
     return res.status(200).json({
       message: "Verification email sent. Please verify to complete registration."
     });
+
   } catch (error) {
     console.error("REGISTER ERROR:", error);
     return res.status(500).json({ message: "Server error" });
@@ -93,7 +161,7 @@ exports.verifyEmail = async (req, res) => {
       name: tempUser.name,
       email: tempUser.email,
       password: tempUser.password,
-      role: "user",
+      role: tempUser.role || "user",  // 🔥 FIX
       isVerified: true
     });
 
@@ -249,7 +317,7 @@ exports.refreshToken = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-//after checking
+    //after checking
     const accessToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,

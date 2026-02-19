@@ -5,6 +5,12 @@ const tempUserSchema = new mongoose.Schema({
   email: String,
   password: String,
   token: String,
+  role: {
+  type: String,
+  enum: ["user", "recruiter"],
+  default: "user"
+},
+
   createdAt: {
     type: Date,
     default: Date.now,

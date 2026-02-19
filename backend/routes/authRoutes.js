@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/authorizeRoles");
+
 const {
   register,
   verifyEmail,
@@ -32,6 +34,16 @@ router.post("/resend-otp", resendOtp);
 
 /* ================= SESSION ================= */
 router.get("/me", auth, me); // ✅ protected route
+/* ================= TEST ROLE PROTECTION ================= */
+router.get(
+  "/recruiter-only",
+  auth,
+  authorizeRoles("recruiter"),
+  (req, res) => {
+    res.json({ message: "Welcome Recruiter!" });
+  }
+);
+
 
 
 module.exports = router;

@@ -104,9 +104,6 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId
     },
 
-    profilePicFileId: {
-      type: mongoose.Schema.Types.ObjectId
-    },
     gender: {
   type: String,
   enum: ["Male", "Female", "Other"]

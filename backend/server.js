@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require("express");  //to create server and handle the roots
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -30,6 +30,9 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/protected", require("./routes/protectedRoutes"));
 
 app.use("/api/users", userRoutes);
+app.use("/api/jobs", require("./routes/jobRoutes"));
+app.use("/api/applications", require("./routes/applicationRoutes"));
+
 
 
 /* =======================
