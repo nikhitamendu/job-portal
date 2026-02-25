@@ -146,8 +146,37 @@ const getJobById = async (req, res) => {  //another backend controller function 
     res.status(500).json({ message: "Server error" });
   }
 };
+/* ================= GET RECRUITER JOBS ================= */
+const getMyJobs = async (req, res) => {
+  try {
+    console.log("User:", req.user);
 
-module.exports = { createJob, getJobs, getJobById };
+    if (!req.user) {
+      return res.status(401).json({ message: "User missing in request" });
+    }
+
+    if (req.user.role !== "recruiter") {
+      return res.status(403).json({
+        message: "Access denied"
+      });
+    }
+
+    const jobs = await Job.find({
+      postedBy: req.user._id
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      count: jobs.length,
+      jobs
+    });
+
+  } catch (error) {
+    console.error("GET MY JOBS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { createJob, getJobs, getJobById,getMyJobs };
 
 
 

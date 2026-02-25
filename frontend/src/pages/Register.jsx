@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -8,6 +9,7 @@ export default function Register() {
     name: "",
     email: "",
     password: "",
+    role: "user"   // ✅ default role
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +29,7 @@ export default function Register() {
       setLoading(true);
       const res = await api.post("/auth/register", form);
       toast.success(res.data.message);
-      setForm({ name: "", email: "", password: "" });
+      setForm({ name: "", email: "", password: "", role: "user" });
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -48,12 +50,28 @@ export default function Register() {
             Create your account 🚀
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Register to start your job search
+            Register to start your journey
           </p>
         </div>
 
         {/* FORM */}
         <form onSubmit={submit} className="space-y-4">
+
+          {/* ROLE SELECT */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Register As
+            </label>
+            <select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+            >
+              <option value="user">Job Seeker</option>
+              <option value="recruiter">Recruiter</option>
+            </select>
+          </div>
 
           {/* NAME */}
           <div>
@@ -87,7 +105,7 @@ export default function Register() {
             />
           </div>
 
-          {/* PASSWORD WITH TOGGLE */}
+          {/* PASSWORD */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -108,7 +126,6 @@ export default function Register() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700"
-                aria-label="Toggle password visibility"
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -140,7 +157,7 @@ export default function Register() {
           </button>
         </form>
 
-        {/* FOOTER LINKS */}
+        {/* FOOTER */}
         <div className="text-center mt-4 text-sm text-gray-600">
           Already have an account?{" "}
           <Link

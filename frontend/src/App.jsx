@@ -11,10 +11,12 @@ import Profile from "./pages/Profile";
 import VerifySuccess from "./pages/VerifySuccess";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import RecruiterDashboard from "./pages/RecruiterDashboard";
+import CreateJob from "./pages/CreateJob";
 import { useAuth } from "./context/AuthContext";
 
 export default function App() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading,user } = useAuth();
 
   // Prevent rendering until auth state is known
   if (loading) {
@@ -34,24 +36,44 @@ export default function App() {
         <Route path="/" element={<Home />} />
 
         {/* AUTH ROUTES */}
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/profile" /> : <Login />
-          }
-        />
+       <Route
+  path="/login"
+  element={
+    isAuthenticated ? (
+      user?.role === "recruiter" ? (
+        <Navigate to="/recruiter/dashboard" />
+      ) : (
+        <Navigate to="/profile" />
+      )
+    ) : (
+      <Login />
+    )
+  }
+/>
 
-        <Route
-          path="/register"
-          element={
-            isAuthenticated ? <Navigate to="/profile" /> : <Register />
-          }
-        />
+
+       <Route
+  path="/register"
+  element={
+    isAuthenticated ? (
+      user?.role === "recruiter" ? (
+        <Navigate to="/recruiter/dashboard" />
+      ) : (
+        <Navigate to="/profile" />
+      )
+    ) : (
+      <Register />
+    )
+  }
+/>
+
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-reset" element={<VerifyReset />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-success" element={<VerifySuccess />} />
+        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+
 
         {/* PROTECTED ROUTES */}
         <Route
@@ -62,6 +84,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/recruiter/create-job"
+  element={
+    <ProtectedRoute>
+      <CreateJob />
+    </ProtectedRoute>
+  }
+/>
 
         {/* CATCH ALL */}
         <Route path="*" element={<Navigate to="/" />} />

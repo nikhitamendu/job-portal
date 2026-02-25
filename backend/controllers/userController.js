@@ -5,6 +5,27 @@ const User = require("../models/User");
 ===================================================== */
 
 const calculateCompletion = (user) => {
+
+  // 🏢 Recruiter Completion
+  if (user.role === "recruiter") {
+
+    const recruiterFields = [
+      user.companyName && user.companyName.trim() !== "",
+      user.companyWebsite && user.companyWebsite.trim() !== "",
+      user.industry && user.industry.trim() !== "",
+      user.companySize && user.companySize.trim() !== "",
+      user.companyDescription && user.companyDescription.trim() !== "",
+      user.companyLocation && user.companyLocation.trim() !== "",
+      user.profilePicFileId ? true : false
+    ];
+
+    const filled = recruiterFields.filter(Boolean).length;
+    const total = recruiterFields.length;
+
+    return Math.round((filled / total) * 100);
+  }
+
+  // 👤 Job Seeker Completion
   const fields = [
     user.phone && user.phone.trim() !== "",
     user.city && user.city.trim() !== "",
@@ -78,7 +99,14 @@ exports.updateProfile = async (req, res) => {
       gender,
       jobTitle,
       city,
-      country
+      country,
+        // 🔥 Recruiter fields
+  companyName,
+  companyWebsite,
+  industry,
+  companySize,
+  companyDescription,
+  companyLocation
     } = req.body;
 
     // Basic Fields
@@ -100,15 +128,32 @@ exports.updateProfile = async (req, res) => {
     if (city !== undefined) user.city = city;
     if (country !== undefined) user.country = country;
 
+    /* ================= RECRUITER FIELDS ================= */
+
+if (companyName !== undefined) user.companyName = companyName;
+if (companyWebsite !== undefined) user.companyWebsite = companyWebsite;
+if (industry !== undefined) user.industry = industry;
+if (companySize !== undefined) user.companySize = companySize;
+if (companyDescription !== undefined) user.companyDescription = companyDescription;
+if (companyLocation !== undefined) user.companyLocation = companyLocation;
+
     await user.save();
 
     const completion = calculateCompletion(user);
 
-    res.json({
-      message: "Profile updated successfully",
-      user,
-      completion
-    });
+    // res.json({
+    //   message: "Profile updated successfully",
+    //   user,
+    //   completion
+    // });
+
+    const safeUser = await User.findById(user._id).select("-password");
+
+res.json({
+  message: "Profile updated successfully",
+  user: safeUser,
+  completion
+});
 
   } catch (error) {
     console.error("UPDATE PROFILE ERROR:", error);

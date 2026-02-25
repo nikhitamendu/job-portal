@@ -25,6 +25,9 @@ export default function Profile() {
 
   if (!profile) return <div className="p-10">Loading...</div>;
 
+const isRecruiter = profile.role === "recruiter";
+console.log("PROFILE ROLE:", profile.role);
+
   /* ================= SAVE FUNCTIONS ================= */
 
   const updateProfile = async (updatedFields) => {
@@ -144,7 +147,10 @@ const handleDeleteProfilePic = async () => {
   )}
 
   <h2 className="mt-4 font-bold text-lg">{profile.name}</h2>
-  <p className="text-gray-500 text-sm">{profile.role}</p>
+  {/* <p className="text-gray-500 text-sm">{profile.role}</p> */}
+  <p className="text-gray-500 text-sm capitalize">
+  {isRecruiter ? "Recruiter" : "Job Seeker"}
+</p>
 
   <button
     onClick={() => setEditBasic(true)}
@@ -159,125 +165,131 @@ const handleDeleteProfilePic = async () => {
           {/* RIGHT */}
           <div className="md:col-span-2 space-y-6">
 
-            {/* Basic */}
-            <Card title="Basic Information" onEdit={() => setEditBasic(true)}>
-              <Info label="Email" value={profile.email} />
-              <Info label="Location" value={profile.location || "—"} />
-              <Info label="Phone" value={profile.phone || "—"} />
-            </Card>
-
-           <Card title="Skills" onEdit={() => setEditSkills(true)}>
-  {profile.skills?.length === 0 ? (
-    <Empty text="No skills added yet" />
-  ) : (
-    <div className="flex flex-wrap gap-2">
-      {profile.skills.map((skill, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-sm group"
-        >
-          {skill}
-
-          <button
-            onClick={() => handleDeleteItem("skills", i)}
-            className="hidden group-hover:inline text-red-500"
-          >
-            ✕
-          </button>
+  {/*for recruiter */}        
+{isRecruiter && (
+  <Card title="Company Information" onEdit={() => setEditBasic(true)}>
+    <Info label="Company Name" value={profile.companyName || "—"} />
+    <Info label="Industry" value={profile.industry || "—"} />
+    <Info label="Company Size" value={profile.companySize || "—"} />
+    <Info label="Company Location" value={profile.companyLocation || "—"} />
+    <Info label="Website" value={profile.companyWebsite || "—"} />
+    <Info label="Description" value={profile.companyDescription || "—"} />
+  </Card>
+)}
+{!isRecruiter && (
+  <>
+    {/* Skills */}
+    <Card title="Skills" onEdit={() => setEditSkills(true)}>
+      {profile.skills?.length === 0 ? (
+        <Empty text="No skills added yet" />
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {profile.skills.map((skill, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-sm group"
+            >
+              {skill}
+              <button
+                onClick={() => handleDeleteItem("skills", i)}
+                className="hidden group-hover:inline text-red-500"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  )}
-</Card>
+      )}
+    </Card>
 
-
-            {/* Experience */}
-            <Card title="Experience" onEdit={() => {
-              setEditingIndex(null);
+    {/* Experience */}
+    <Card title="Experience" onEdit={() => {
+      setEditingIndex(null);
+      setEditExperience(true);
+    }}>
+      {profile.experience?.length === 0 ? (
+        <Empty text="No experience added yet" />
+      ) : (
+        profile.experience.map((e, i) => (
+          <ItemRow
+            key={i}
+            text={`${e.role} - ${e.company}`}
+            onEdit={() => {
+              setEditingIndex(i);
               setEditExperience(true);
-            }}>
-              {profile.experience?.length === 0 ? (
-                <Empty text="No experience added yet" />
-              ) : (
-                profile.experience.map((e, i) => (
-                  <ItemRow
-                    key={i}
-                    text={`${e.role} - ${e.company}`}
-                    onEdit={() => {
-                      setEditingIndex(i);
-                      setEditExperience(true);
-                    }}
-                    onDelete={() => handleDeleteItem("experience", i)}
-                  />
-                ))
-              )}
-            </Card>
+            }}
+            onDelete={() => handleDeleteItem("experience", i)}
+          />
+        ))
+      )}
+    </Card>
 
-            {/* Education */}
-            <Card title="Education" onEdit={() => {
-              setEditingIndex(null);
+    {/* Education */}
+    <Card title="Education" onEdit={() => {
+      setEditingIndex(null);
+      setEditEducation(true);
+    }}>
+      {profile.education?.length === 0 ? (
+        <Empty text="No education added yet" />
+      ) : (
+        profile.education.map((e, i) => (
+          <ItemRow
+            key={i}
+            text={`${e.degree} - ${e.institute}`}
+            onEdit={() => {
+              setEditingIndex(i);
               setEditEducation(true);
-            }}>
-              {profile.education?.length === 0 ? (
-                <Empty text="No education added yet" />
-              ) : (
-                profile.education.map((e, i) => (
-                  <ItemRow
-                    key={i}
-                    text={`${e.degree} - ${e.institute}`}
-                    onEdit={() => {
-                      setEditingIndex(i);
-                      setEditEducation(true);
-                    }}
-                    onDelete={() => handleDeleteItem("education", i)}
-                  />
-                ))
-              )}
-            </Card>
+            }}
+            onDelete={() => handleDeleteItem("education", i)}
+          />
+        ))
+      )}
+    </Card>
 
-            {/* Resume */}
-           <Card title="Resume">
-  {profile.resumeFileId ? (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-2 rounded">
-        <span className="text-green-700 text-sm font-medium">
-          ✔ Resume Uploaded
-        </span>
+    {/* Resume */}
+    <Card title="Resume">
+      {profile.resumeFileId ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-2 rounded">
+            <span className="text-green-700 text-sm font-medium">
+              ✔ Resume Uploaded
+            </span>
 
-        <div className="space-x-4 text-sm">
-          <a
-href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 underline"
-          >
-            View
-          </a>
+            <div className="space-x-4 text-sm">
+              <a
+                href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 underline"
+              >
+                View
+              </a>
 
-          <button
-            onClick={handleDeleteResume}
-            className="text-red-600"
-          >
-            Delete
-          </button>
+              <button
+                onClick={handleDeleteResume}
+                className="text-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  ) : (
-    <Empty text="No resume uploaded" />
-  )}
+      ) : (
+        <Empty text="No resume uploaded" />
+      )}
 
-  <label className="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer text-sm">
-    {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
-    <input
-      type="file"
-      accept=".pdf,.doc,.docx"
-      onChange={handleResumeUpload}
-      className="hidden"
-    />
-  </label>
-</Card>
-
+      <label className="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer text-sm">
+        {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          onChange={handleResumeUpload}
+          className="hidden"
+        />
+      </label>
+    </Card>
+  </>
+)}
 
           </div>
         </div>
@@ -295,7 +307,7 @@ href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
         />
       )}
 
-      {editSkills && (
+      {!isRecruiter && editSkills && (
         <SkillsModal
           data={profile.skills}
           onClose={() => setEditSkills(false)}
@@ -306,7 +318,7 @@ href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
         />
       )}
 
-      {editExperience && (
+      {isRecruiter && editExperience && (
         <ExperienceModal
           data={editingIndex !== null ? profile.experience[editingIndex] : null}
           onClose={() => setEditExperience(false)}
@@ -322,7 +334,7 @@ href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
         />
       )}
 
-      {editEducation && (
+      {isRecruiter && editEducation && (
         <EducationModal
           data={editingIndex !== null ? profile.education[editingIndex] : null}
           onClose={() => setEditEducation(false)}
@@ -407,6 +419,34 @@ function Modal({ title, children, onClose, onSave }) {
     </div>
   );
 }
+// function BasicModal({ data, onClose, onSave }) {
+//   const [form, setForm] = useState(data);
+
+//   useEffect(() => {
+//     setForm(data);
+//   }, [data]);
+
+//   return (
+//     <Modal title="Edit Basic Info" onClose={onClose} onSave={() => onSave(form)}>
+//       <Input
+//         label="Name"
+//         value={form.name || ""}
+//         onChange={(e) => setForm({ ...form, name: e.target.value })}
+//       />
+//       <Input
+//         label="Location"
+//         value={form.location || ""}
+//         onChange={(e) => setForm({ ...form, location: e.target.value })}
+//       />
+//       <Input
+//         label="Phone"
+//         value={form.phone || ""}
+//         onChange={(e) => setForm({ ...form, phone: e.target.value })}
+//       />
+//     </Modal>
+//   );
+// }
+
 function BasicModal({ data, onClose, onSave }) {
   const [form, setForm] = useState(data);
 
@@ -414,23 +454,78 @@ function BasicModal({ data, onClose, onSave }) {
     setForm(data);
   }, [data]);
 
+  const isRecruiter = form.role === "recruiter";
+
   return (
-    <Modal title="Edit Basic Info" onClose={onClose} onSave={() => onSave(form)}>
+    <Modal title="Edit Profile" onClose={onClose} onSave={() => onSave(form)}>
+      
       <Input
         label="Name"
         value={form.name || ""}
         onChange={(e) => setForm({ ...form, name: e.target.value })}
       />
-      <Input
-        label="Location"
-        value={form.location || ""}
-        onChange={(e) => setForm({ ...form, location: e.target.value })}
-      />
-      <Input
-        label="Phone"
-        value={form.phone || ""}
-        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-      />
+
+      {!isRecruiter && (
+        <>
+          <Input
+            label="Location"
+            value={form.location || ""}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+          />
+          <Input
+            label="Phone"
+            value={form.phone || ""}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
+        </>
+      )}
+
+      {isRecruiter && (
+        <>
+          <Input
+            label="Company Name"
+            value={form.companyName || ""}
+            onChange={(e) =>
+              setForm({ ...form, companyName: e.target.value })
+            }
+          />
+          <Input
+            label="Industry"
+            value={form.industry || ""}
+            onChange={(e) =>
+              setForm({ ...form, industry: e.target.value })
+            }
+          />
+          <Input
+            label="Company Size"
+            value={form.companySize || ""}
+            onChange={(e) =>
+              setForm({ ...form, companySize: e.target.value })
+            }
+          />
+          <Input
+            label="Company Location"
+            value={form.companyLocation || ""}
+            onChange={(e) =>
+              setForm({ ...form, companyLocation: e.target.value })
+            }
+          />
+          <Input
+            label="Company Website"
+            value={form.companyWebsite || ""}
+            onChange={(e) =>
+              setForm({ ...form, companyWebsite: e.target.value })
+            }
+          />
+          <Input
+            label="Company Description"
+            value={form.companyDescription || ""}
+            onChange={(e) =>
+              setForm({ ...form, companyDescription: e.target.value })
+            }
+          />
+        </>
+      )}
     </Modal>
   );
 }

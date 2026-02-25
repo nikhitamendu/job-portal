@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -33,7 +33,18 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <NavItem to="/profile">Profile</NavItem>
+              {user?.role === "recruiter" ? (
+                <>
+                  <NavItem to="/recruiter/dashboard">
+                    Dashboard
+                  </NavItem>
+                  <NavItem to="/profile">
+                    Company Profile
+                  </NavItem>
+                </>
+              ) : (
+                <NavItem to="/profile">Profile</NavItem>
+              )}
 
               {/* LOGOUT BUTTON */}
               <button

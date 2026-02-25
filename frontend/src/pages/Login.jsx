@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -9,9 +9,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login, user } = useAuth();
+
 
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ export default function Login() {
       setLoading(true);
       await login(email, password);
       toast.success("Welcome back!");
-      navigate("/profile");
+      // navigate("/profile");
     } catch (err) {
       setError(
         err.response?.data?.message || "Invalid email or password"
@@ -30,6 +31,19 @@ export default function Login() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+  if (user) {
+        console.log("Logged in user:", user);  // 👈 add this
+    if (user.role === "recruiter") {
+      navigate("/recruiter/dashboard");
+    } else {
+      navigate("/profile");
+    }
+  }
+}, [user, navigate]);
+
+ 
+
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">

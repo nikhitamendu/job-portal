@@ -131,7 +131,37 @@ profilePicFileId: {
   type: mongoose.Schema.Types.ObjectId,
   default: null
 },
+/* ================= RECRUITER FIELDS ================= */
 
+companyName: {
+  type: String,
+  trim: true
+},
+
+companyWebsite: {
+  type: String,
+  trim: true
+},
+
+industry: {
+  type: String,
+  trim: true
+},
+
+companySize: {
+  type: String,
+  trim: true
+},
+
+companyDescription: {
+  type: String,
+  maxlength: 1000
+},
+
+companyLocation: {
+  type: String,
+  trim: true
+},
     
   },
   { timestamps: true }
