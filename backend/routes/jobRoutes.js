@@ -1,4 +1,4 @@
-
+//this file defines all job-related API endpoints such as creating jobs, fetching all jobs, getting a single job, and fetching recruiter-specific jobs.
 
 const express = require("express");
 const router = express.Router();
@@ -6,26 +6,42 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
-const { createJob,getJobs,getJobById,getMyJobs } = require("../controllers/jobController");   //save the job in db
+const { createJob,getJobs,getJobById,getMyJobs,deleteJob } = require("../controllers/jobController");   //save the job in db
 /* ================= GET ALL JOBS ================= */
-router.get("/", getJobs);
+router.get("/", getJobs);   //any one access no login required  //used for home pages and job listing pages
 
-//recruiter dashboard
+const {updateJob} = require("../controllers/jobController")
+
+//recruiter dashboard  protected
 router.get(
-  "/my-jobs",
-  auth,
+  "/my-jobs",  //get/api/jobs/my-jobs
+  auth,  //authentication reads jwt from header verifies token extracts user id attaches user to request
   authorizeRoles("recruiter"),
-  getMyJobs
+  getMyJobs   //shows only jobs posted by recruiter
+  
 );
 
-
+//updating
+router.put(
+  "/:id",
+  auth,
+  authorizeRoles("recruiter"),
+  updateJob
+);
 /* ================= GET SINGLE JOB ================= */
 router.get("/:id", getJobById);
 
+//for deleting job
+router.delete(
+  "/:id",
+  auth,
+  authorizeRoles("recruiter"),
+  deleteJob
+);
 
 /* ================= CREATE JOB ================= */
 router.post(  //middleware pipeline ...it does not go directly to controller it passes security layers 
-  "/",  //requestok
+  "/", // / means base //requestok  //only logged in recruiter can create a job
   auth,  //authentication
   authorizeRoles("recruiter"),   //authorization
   createJob    //business logic to create job

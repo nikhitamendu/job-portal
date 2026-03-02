@@ -3,7 +3,7 @@ const router = express.Router();
 
 const auth = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles");
-
+//these run before controller executes
 const {
   register,
   verifyEmail,

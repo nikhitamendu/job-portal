@@ -14,6 +14,8 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CreateJob from "./pages/CreateJob";
 import { useAuth } from "./context/AuthContext";
+import JobDetails from "./pages/JobDetails";
+import EditJob from "./pages/EditJob";
 
 export default function App() {
   const { isAuthenticated, loading,user } = useAuth();
@@ -73,6 +75,10 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-success" element={<VerifySuccess />} />
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+        <Route path="/jobs/:id" element={<JobDetails />} />
+        <Route path="/recruiter/edit-job/:id" element={<EditJob />} />
+        <Route path="/recruiter/create-job" element={<CreateJob />} />
+
 
 
         {/* PROTECTED ROUTES */}

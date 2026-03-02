@@ -20,7 +20,7 @@ const applyToJob = async (req, res) => {
     const application = await Application.create({
       job: jobId,
       applicant: req.user._id  //you do not take applicant id from frontend
-    });
+    });  //req.user._id is the logged in user database comes from auth middleware
 
     res.status(201).json({
       message: "Application submitted successfully",
@@ -40,3 +40,18 @@ const applyToJob = async (req, res) => {
 };
 
 module.exports = { applyToJob };
+//User clicks Apply
+// ↓
+// Frontend sends jobId
+// ↓
+// authMiddleware verifies login
+// ↓
+// Controller checks job exists
+// ↓
+// Checks user role
+// ↓
+// Creates application
+// ↓
+// MongoDB stores relation
+// ↓
+// res shown to user

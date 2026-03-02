@@ -33,7 +33,7 @@ export default function Login() {
   };
   useEffect(() => {
   if (user) {
-        console.log("Logged in user:", user);  // 👈 add this
+        console.log("Logged in user:", user);  
     if (user.role === "recruiter") {
       navigate("/recruiter/dashboard");
     } else {
@@ -146,3 +146,4 @@ export default function Login() {
     </div>
   );
 }
+//When the user submits the login form, React calls the login function from AuthContext, which sends credentials to the backend using Axios. The backend verifies the email and password using bcrypt, generates JWT access and refresh tokens, and returns the access token. The frontend stores the access token in memory and then fetches user details using /auth/me. Based on the user role, the application redirects to the appropriate dashboard.

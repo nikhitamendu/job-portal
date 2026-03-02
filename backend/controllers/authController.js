@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
     email = email.toLowerCase().trim();
 
     const allowedRoles = ["user", "recruiter"];
-    const selectedRole = allowedRoles.includes(role) ? role : "user";
+    const selectedRole = allowedRoles.includes(role) ? role : "user";   //if role is valid ....if role is invalid default to user
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -42,7 +42,7 @@ exports.register = async (req, res) => {
     await TempUser.deleteOne({ email });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = crypto.randomBytes(32).toString("hex");  //creates token instead of otp
 
     await TempUser.create({
       name,
@@ -79,7 +79,11 @@ exports.register = async (req, res) => {
 ===================================================== */
 exports.verifyEmail = async (req, res) => {
   try {
+    //router.get("/verify/:token",verifyEmail)
+    //when user clicks the link it comes to req.params
     const { token } = req.params;
+
+    //req.params is an object in express.js that contains values taken from thr url path
 
     const tempUser = await TempUser.findOne({ token });
     if (!tempUser) {
@@ -427,7 +431,7 @@ exports.resendOtp = async (req, res) => {
   }
 };
 
-exports.me = async (req, res) => {
+exports.me = async (req, res) => {   //it returns the currently logged in user detauils
   try {
     const user = await User.findById(req.user.id).select("-password");  //you fetch the logged in user from databse using tge id from token and excludes tg=he passwird field from the response  // req.user comes from suyh middle ware
     return res.json({ user });

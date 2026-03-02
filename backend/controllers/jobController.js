@@ -33,7 +33,8 @@ const createJob = async (req, res) => {
       salary,
       experienceLevel,
       applicationDeadline,
-      postedBy: req.user._id   // 🔥 recruiter id from auth middleware  //you do not trust frontend to send recruiter id //you take it from backend and secure
+      postedBy: req.user._id   //  recruiter id from auth middleware  //you do not trust frontend to send recruiter id //you take it from backend and secure
+    //
     });
 
     return res.status(201).json({
@@ -66,7 +67,7 @@ const getJobs = async (req, res) => {
     // 🔍 Search by title (case-insensitive)
    if (search) {
   query.$or = [
-    { title: { $regex: search, $options: "i" } },
+    { title: { $regex: search, $options: "i" } },   //case insensitive search
     { description: { $regex: search, $options: "i" } },
     { "location.city": { $regex: search, $options: "i" } },
     { "location.country": { $regex: search, $options: "i" } },
@@ -89,7 +90,7 @@ const getJobs = async (req, res) => {
 
     // 🎯 Experience filter
     if (experienceLevel) {
-      query.experienceLevel = experienceLevel;
+      query.experienceLevel = experienceLevel; 
     }
 
     // 💼 Employment type filter
@@ -98,7 +99,7 @@ const getJobs = async (req, res) => {
     }
 
     // 📄 Pagination
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;  //10 per page
 
     // 🔃 Sorting
     let sortOption = { createdAt: -1 }; // default newest
@@ -107,7 +108,7 @@ const getJobs = async (req, res) => {
     if (sort === "salaryLow") sortOption = { "salary.min": 1 };
 
     const jobs = await Job.find(query) //filter data
-      .populate("postedBy", "name email") //show reecruiter name and email in job listing
+      .populate("postedBy", "name email") //show reecruiter name and email in job listing instead of id
       .sort(sortOption)  //sort data
       .skip(skip)//page start 
       .limit(Number(limit)); //page size number of data per page
@@ -127,7 +128,7 @@ const getJobs = async (req, res) => {
   }
 };
 
-/* ================= GET SINGLE JOB ================= */
+/* ================= GET SINGLE JOB ================= */  //get/api/jobs/:id
 const getJobById = async (req, res) => {  //another backend controller function to get single job details by id when usee clicks on job listing to see details 
   try {  //asyn calls because database call takes time
     const job = await Job.findById(req.params.id)  //req.params.id /api/jobs/:id 
@@ -163,7 +164,7 @@ const getMyJobs = async (req, res) => {
 
     const jobs = await Job.find({
       postedBy: req.user._id
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 });  //shows recruiter only the jobs they posted
 
     res.json({
       count: jobs.length,
@@ -176,7 +177,77 @@ const getMyJobs = async (req, res) => {
   }
 };
 
-module.exports = { createJob, getJobs, getJobById,getMyJobs };
+//for deleting
+const deleteJob = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,  //by thsi only find the job
+      postedBy: req.user._id //must belong to logged in user
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    await job.deleteOne();
+
+    res.json({ message: "Job deleted successfully" });
+  } catch (error) {
+    console.error("DELETE JOB ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= UPDATE JOB ================= */
+const updateJob = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      postedBy: req.user._id   // ensure only owner recruiter can edit
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const {
+      title,
+      description,
+      requirements,
+      skillsRequired,
+      employmentType,
+      workplaceType,
+      location,
+      salary,
+      experienceLevel,
+      applicationDeadline
+    } = req.body;
+
+    if (title !== undefined) job.title = title;
+    if (description !== undefined) job.description = description;
+    if (requirements !== undefined) job.requirements = requirements;
+    if (skillsRequired !== undefined) job.skillsRequired = skillsRequired;
+    if (employmentType !== undefined) job.employmentType = employmentType;
+    if (workplaceType !== undefined) job.workplaceType = workplaceType;
+    if (location !== undefined) job.location = location;
+    if (salary !== undefined) job.salary = salary;
+    if (experienceLevel !== undefined) job.experienceLevel = experienceLevel;
+    if (applicationDeadline !== undefined) job.applicationDeadline = applicationDeadline;
+
+    await job.save();
+
+    res.json({
+      message: "Job updated successfully",
+      job
+    });
+
+  } catch (error) {
+    console.error("UPDATE JOB ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createJob, getJobs, getJobById,getMyJobs,deleteJob,updateJob };
 
 
 

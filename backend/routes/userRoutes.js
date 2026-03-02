@@ -34,32 +34,35 @@ router.post(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const bucket = req.app.locals.bucket;
-      const user = await User.findById(req.user._id);
+      const bucket = req.app.locals.bucket;  //in server.js app.locals.bucket = bucket; 
+      const user = await User.findById(req.user._id);  //get current user
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Delete old resume
+//when user uploads new resume we must delete old resume 
       if (user.resumeFileId) {
         try {
           await bucket.delete(
-            new mongoose.Types.ObjectId(user.resumeFileId)
-          );
+            new mongoose.Types.ObjectId(user.resumeFileId)  //converts string to obect id 
+          );//so it will make "1332358" as id:ObjectId("133523")
         } catch (err) {
           console.log("Old resume not found in GridFS");
         }
       }
 
-      const uploadStream = bucket.openUploadStream(req.file.originalname, {
-        contentType: req.file.mimetype
+      //upload new file to gridfs
+//m about to upload a file — prepare storage” bucket = GridFSBucket (Mongo file storage system).
+//so mongo create file entry in fs.files--meta data,fs.chunks--binary pieces
+      const uploadStream = bucket.openUploadStream(req.file.originalname, {  //it creates id,filename,content type
+        contentType: req.file.mimetype  //mime type means application/pdf
       });
 
-      uploadStream.end(req.file.buffer);
+      uploadStream.end(req.file.buffer);  //saves the file into mongodb
 
       uploadStream.on("finish", async () => {
-        user.resumeFileId = uploadStream.id;
+        user.resumeFileId = uploadStream.id;   //uploadStream.id === ObjectId("65fa2c91b8c2c7f9d2a1e441")  
         await user.save();
 
         res.status(200).json({
@@ -76,8 +79,9 @@ router.post(
       res.status(500).json({ message: "Internal server error" });
     }
   }
-);
-
+);  //User uploads resume>>Multer stores file in memory>>GridFS upload stream created
+//>>File written into MongoDB chunks>>Mongo generates fileId>>fileId saved in User document
+//>>Success response sent
 /* =====================================================
    DELETE RESUME
 ===================================================== */
@@ -85,14 +89,14 @@ router.post(
 router.delete("/delete-resume", authMiddleware, async (req, res) => {
   try {
     const bucket = req.app.locals.bucket;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);//fetch the user from database
 
     if (!user || !user.resumeFileId) {
       return res.status(400).json({ message: "No resume to delete" });
     }
 
     await bucket.delete(
-      new mongoose.Types.ObjectId(user.resumeFileId)
+      new mongoose.Types.ObjectId(user.resumeFileId)  //remove files from mongodb
     );
 
     user.resumeFileId = null;
@@ -112,7 +116,7 @@ router.delete("/delete-resume", authMiddleware, async (req, res) => {
 
 router.post(
   "/upload-profile-pic",
-  authMiddleware,
+  authMiddleware,  //user must be logged in
   upload.single("profilePic"),
   async (req, res) => {
     try {
@@ -120,7 +124,7 @@ router.post(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const bucket = req.app.locals.bucket;
+      const bucket = req.app.locals.bucket;  //bucket gridfs storage
       const user = await User.findById(req.user._id);
 
       if (!user) {
@@ -131,7 +135,7 @@ router.post(
       if (user.profilePicFileId) {
         try {
           await bucket.delete(
-            new mongoose.Types.ObjectId(user.profilePicFileId)
+            new mongoose.Types.ObjectId(user.profilePicFileId)  //user replacing the picture
           );
         } catch (err) {
           console.log("Old profile picture not found");
@@ -198,17 +202,18 @@ router.delete("/delete-profile-pic", authMiddleware, async (req, res) => {
 router.get("/file/:id", async (req, res) => {
   try {
     const bucket = req.app.locals.bucket;
-    const fileId = new mongoose.Types.ObjectId(req.params.id);
+    const fileId = new mongoose.Types.ObjectId(req.params.id);  //url gives string 
+    //but mongodb needs objectid (4132) so conversion is required
 
     const files = await bucket.find({ _id: fileId }).toArray();
     if (!files || files.length === 0) {
       return res.status(404).json({ message: "File not found" });
     }
 
-    res.set("Content-Type", files[0].contentType);
-
+    res.set("Content-Type", files[0].contentType);//it tells browser how to handle file
+//img/png>>show img, appli/pdf>>open pdf without this browser downloads garbage data
     const downloadStream = bucket.openDownloadStream(fileId);
-    downloadStream.pipe(res);
+    downloadStream.pipe(res);  //
 
   } catch (err) {
     res.status(500).json({ message: "Error retrieving file" });
@@ -217,3 +222,4 @@ router.get("/file/:id", async (req, res) => {
 
 
 module.exports = router;
+//Take data coming from one stream and directly send it into another stream”:pipe

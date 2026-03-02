@@ -1,6 +1,6 @@
-const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
+const authorizeRoles = (...roles) => { //...rest operator as it defines multiple roles  //this middleware checks whether the logged in user has permission to access a specific route
+  return (req, res, next) => {   //verifies permission //auth middleware verifies identity
+    if (!req.user) {  //used in auth middleware
       return res.status(401).json({
         message: "Not authorized"
       });

@@ -171,3 +171,4 @@ export default function Register() {
     </div>
   );
 }
+//When a user registers, the frontend sends form data to the backend. Instead of immediately creating an account, the backend stores the user in a temporary collection and sends a verification email. Once the user clicks the verification link, the record is moved to the main user collection and the account becomes active.

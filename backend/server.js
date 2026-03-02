@@ -1,31 +1,33 @@
-const express = require("express");  //to create server and handle the roots
-const mongoose = require("mongoose");
-const cors = require("cors");
+const express = require("express");  //to create server and handle the roots //handles http requests 
+const mongoose = require("mongoose"); //odm to interact with database using schemas
+const cors = require("cors");//connect frontend //allows react different port to access baqckend
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
-const app = express();
-const userRoutes = require("./routes/userRoutes");
+const app = express();  //this line creates backend server object //everu request from frontend first enters app
+const userRoutes = require("./routes/userRoutes");  //require means import the file use means register the routes in express
 const { GridFSBucket } = require("mongodb");
 
 
 /* =======================
    GLOBAL MIDDLEWARE
 ======================= */
-app.use(express.json());
+app.use(express.json());  //converts frontend json req in js object
+//supoose frontend sends email:nikjbnjmk backend recieves req.body.email
 
 app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  })
+  })//react localhost:5173backend:local host 5000
+  //since frontend and backend run on different ports,browser blocks request due to some origing policy.so i enabled cors to all react to communicare with bACJEND
 );
 
-app.use(cookieParser());
+app.use(cookieParser());  //used for authentication systems
 
 /* =======================
    ROUTES
-======================= */
+======================= */    //attach all routes inside userRoutes to thr 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/protected", require("./routes/protectedRoutes"));
 
@@ -56,7 +58,7 @@ mongoose.connection.once("open", () => {
     bucketName: "uploads"
   });
 
-  app.locals.bucket = bucket;
+  app.locals.bucket = bucket;   //stores files (resume )  using gridfs mongodb document =16mb,resume pfd are bigger so we store them as chunks
 });
 
 startServer();

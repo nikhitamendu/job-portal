@@ -21,6 +21,7 @@ const calculateCompletion = (user) => {
 
     const filled = recruiterFields.filter(Boolean).length;
     const total = recruiterFields.length;
+    //eg 5/7 filled then (5/7)*100=71%
 
     return Math.round((filled / total) * 100);
   }
@@ -41,7 +42,7 @@ const calculateCompletion = (user) => {
     user.resumeFileId ? true : false,
     user.profilePicFileId ? true : false
   ];
-
+//Each item becomes true or false depending on whether that field is filled.
   const filledFields = fields.filter(Boolean).length;
   const totalFields = fields.length;
 
@@ -57,6 +58,7 @@ exports.getProfile = async (req, res) => {
   try {
     // Always fetch fresh user from DB
     const user = await User.findById(req.user._id).select("-password");
+    //req.user comes from auth middleware
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -82,7 +84,8 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);  
+    //extract body const{phone,bio....}
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

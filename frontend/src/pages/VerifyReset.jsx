@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";   //backend verifyotp
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../services/api";
@@ -112,3 +112,14 @@ export default function VerifyReset() {
     </div>
   );
 }
+// User enters email
+// ↓
+// OTP sent to email
+// ↓
+// User enters OTP
+// ↓
+// POST /auth/verify-otp
+// ↓
+// Backend validates OTP
+// ↓
+// Allow reset password page

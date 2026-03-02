@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { toast } from "react-toastify";
 
 export default function RecruiterDashboard() {
   const { user } = useAuth();
@@ -20,8 +21,19 @@ export default function RecruiterDashboard() {
       setJobs(data.jobs);
     } catch (err) {
       console.error("Error fetching jobs");
+      toast.error("Failed to load jobs");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/jobs/${id}`);
+      toast.success("Job deleted successfully");
+      fetchMyJobs();
+    } catch (err) {
+      toast.error("Failed to delete job");
     }
   };
 
@@ -74,12 +86,26 @@ export default function RecruiterDashboard() {
                     </p>
                   </div>
 
-                  <div className="space-x-3 text-sm">
+                  <div className="flex gap-4 text-sm">
                     <button
                       onClick={() => navigate(`/jobs/${job._id}`)}
                       className="text-blue-600"
                     >
                       View
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/recruiter/edit-job/${job._id}`)}
+                      className="text-green-600"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(job._id)}
+                      className="text-red-600"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>

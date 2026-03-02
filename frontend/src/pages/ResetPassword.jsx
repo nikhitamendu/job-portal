@@ -27,6 +27,8 @@ export default function ResetPassword() {
     try {
       setLoading(true);
       await api.post("/auth/reset-password", { email, password });
+      //POST http://localhost:5000/api/auth/reset-password
+// Content-Type: application/json
       toast.success("Password reset successful");
       navigate("/login");
     } catch (err) {

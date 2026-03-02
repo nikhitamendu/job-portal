@@ -16,6 +16,7 @@ export default function ForgotPassword() {
       const res = await api.post("/auth/forgot-password", { email });
       toast.success(res.data.message);
       navigate("/verify-reset", { state: { email } });
+      //ou pass email through React Router state instead of URL.
     } catch (err) {
       toast.error(
         err.response?.data?.message || "Failed to send OTP"

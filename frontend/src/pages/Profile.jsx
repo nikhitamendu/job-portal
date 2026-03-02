@@ -11,7 +11,7 @@ export default function Profile() {
   const [editExperience, setEditExperience] = useState(false);
   const [editEducation, setEditEducation] = useState(false);
 
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingIndex, setEditingIndex] = useState(null);//Used when editing specific experience/education entry.
 
   useEffect(() => {
     fetchProfile();
@@ -24,32 +24,34 @@ export default function Profile() {
   };
 
   if (!profile) return <div className="p-10">Loading...</div>;
+  //untill api returns show loading
 
 const isRecruiter = profile.role === "recruiter";
-console.log("PROFILE ROLE:", profile.role);
+// console.log("PROFILE ROLE:", profile.role);
 
   /* ================= SAVE FUNCTIONS ================= */
 
   const updateProfile = async (updatedFields) => {
     const { data } = await axios.put("/users/profile", updatedFields);
     setProfile(data.user);
-    setCompletion(data.completion);
+    setCompletion(data.completion);  //only updates the updated fields
   };
 
   /* ================= RESUME ================= */
 
   const handleResumeUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0];  //user selects file
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("resume", file);
+    formData.append("resume", file); //send this file to backend
 
     await axios.post("/users/upload-resume", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
+      headers: { "Content-Type": "multipart/form-data" } //send tro backend gridfs stores file
     });
 
     await fetchProfile();
+//reload profile to show update
     e.target.value = null;
   };
 
@@ -419,33 +421,6 @@ function Modal({ title, children, onClose, onSave }) {
     </div>
   );
 }
-// function BasicModal({ data, onClose, onSave }) {
-//   const [form, setForm] = useState(data);
-
-//   useEffect(() => {
-//     setForm(data);
-//   }, [data]);
-
-//   return (
-//     <Modal title="Edit Basic Info" onClose={onClose} onSave={() => onSave(form)}>
-//       <Input
-//         label="Name"
-//         value={form.name || ""}
-//         onChange={(e) => setForm({ ...form, name: e.target.value })}
-//       />
-//       <Input
-//         label="Location"
-//         value={form.location || ""}
-//         onChange={(e) => setForm({ ...form, location: e.target.value })}
-//       />
-//       <Input
-//         label="Phone"
-//         value={form.phone || ""}
-//         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-//       />
-//     </Modal>
-//   );
-// }
 
 function BasicModal({ data, onClose, onSave }) {
   const [form, setForm] = useState(data);
@@ -623,3 +598,20 @@ function Input({ label, ...props }) {
     </div>
   );
 }
+//User opens Profile page
+// ↓
+// React sends GET /api/users/profile
+// ↓
+// Axios interceptor attaches JWT
+// ↓
+// authMiddleware verifies token
+// ↓
+// userController.getProfile()
+// ↓
+// MongoDB fetch user
+// ↓
+// Calculate completion %
+// ↓
+// Send JSON response
+// ↓
+// React setProfile() updates UI
