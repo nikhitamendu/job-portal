@@ -23,7 +23,6 @@ router.put("/profile", authMiddleware, updateProfile);
 /* =====================================================
    UPLOAD RESUME
 ===================================================== */
-
 router.post(
   "/upload-resume",
   authMiddleware,
@@ -34,52 +33,56 @@ router.post(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const bucket = req.app.locals.bucket;  //in server.js app.locals.bucket = bucket; 
-      const user = await User.findById(req.user._id);  //get current user
+      const bucket = req.app.locals.bucket;
+      const user = await User.findById(req.user._id);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-//when user uploads new resume we must delete old resume 
-      if (user.resumeFileId) {
-        try {
-          await bucket.delete(
-            new mongoose.Types.ObjectId(user.resumeFileId)  //converts string to obect id 
-          );//so it will make "1332358" as id:ObjectId("133523")
-        } catch (err) {
-          console.log("Old resume not found in GridFS");
-        }
-      }
+      const oldResumeId = user.resumeFileId;
 
-      //upload new file to gridfs
-//m about to upload a file — prepare storage” bucket = GridFSBucket (Mongo file storage system).
-//so mongo create file entry in fs.files--meta data,fs.chunks--binary pieces
-      const uploadStream = bucket.openUploadStream(req.file.originalname, {  //it creates id,filename,content type
-        contentType: req.file.mimetype  //mime type means application/pdf
-      });
+      const uploadStream = bucket.openUploadStream(
+        req.file.originalname,
+        { contentType: req.file.mimetype }
+      );
 
-      uploadStream.end(req.file.buffer);  //saves the file into mongodb
+      uploadStream.end(req.file.buffer);
 
       uploadStream.on("finish", async () => {
-        user.resumeFileId = uploadStream.id;   //uploadStream.id === ObjectId("65fa2c91b8c2c7f9d2a1e441")  
-        await user.save();
+        try {
+          // Save new resume ID
+          user.resumeFileId = uploadStream.id;
+          await user.save();
 
-        res.status(200).json({
-          message: "Resume uploaded successfully",
-          resumeFileId: uploadStream.id
-        });
-      });
+          // Delete old resume AFTER successful save
+          if (oldResumeId) {
+            try {
+              await bucket.delete(oldResumeId);
+              console.log("Old resume deleted");
+            } catch {
+              console.log("Old resume not found");
+            }
+          }
 
-      uploadStream.on("error", () => {
-        res.status(500).json({ message: "Error uploading resume" });
+          res.json({
+            message: "Resume uploaded successfully",
+            resumeFileId: uploadStream.id
+          });
+        } catch (err) {
+          console.error("SAVE ERROR:", err);
+          res.status(500).json({ message: "Error saving resume" });
+        }
       });
 
     } catch (err) {
+      console.error("UPLOAD ERROR:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   }
-);  //User uploads resume>>Multer stores file in memory>>GridFS upload stream created
+);
+
+ //User uploads resume>>Multer stores file in memory>>GridFS upload stream created
 //>>File written into MongoDB chunks>>Mongo generates fileId>>fileId saved in User document
 //>>Success response sent
 /* =====================================================

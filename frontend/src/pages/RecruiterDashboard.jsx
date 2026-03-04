@@ -86,28 +86,25 @@ export default function RecruiterDashboard() {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 text-sm">
-                    <button
-                      onClick={() => navigate(`/jobs/${job._id}`)}
-                      className="text-blue-600"
-                    >
-                      View
-                    </button>
+               <div className="flex gap-4 text-sm">
+ 
 
-                    <button
-                      onClick={() => navigate(`/recruiter/edit-job/${job._id}`)}
-                      className="text-green-600"
-                    >
-                      Edit
-                    </button>
+  
 
-                    <button
-                      onClick={() => handleDelete(job._id)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
-                  </div>
+  <button
+    onClick={() => navigate(`/recruiter/edit-job/${job._id}`)}
+    className="text-green-600"
+  >
+    Edit
+  </button>
+
+  <button
+    onClick={() => handleDelete(job._id)}
+    className="text-red-600"
+  >
+    Delete
+  </button>
+</div>
                 </div>
               ))}
             </div>

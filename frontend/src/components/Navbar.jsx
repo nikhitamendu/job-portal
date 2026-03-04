@@ -1,10 +1,12 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout, user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -15,7 +17,7 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-900 text-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
-        
+
         {/* LOGO */}
         <Link
           to="/"
@@ -24,8 +26,20 @@ export default function Navbar() {
           Job<span className="text-blue-500">Portal</span>
         </Link>
 
+        {/* MOBILE MENU BUTTON */}
+        <button
+          className="md:hidden text-white"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          ☰
+        </button>
+
         {/* NAV LINKS */}
-        <div className="flex items-center gap-4 text-sm">
+        <div
+          className={`${
+            isOpen ? "flex" : "hidden"
+          } md:flex flex-col md:flex-row absolute md:static top-16 left-0 w-full md:w-auto bg-gray-900 md:bg-transparent p-6 md:p-0 gap-4 text-sm`}
+        >
           {!isAuthenticated ? (
             <>
               <NavItem to="/login">Login</NavItem>
@@ -33,23 +47,37 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              {user?.role === "recruiter" ? (
+              {/* RECRUITER NAV */}
+              {user?.role === "recruiter" && (
                 <>
                   <NavItem to="/recruiter/dashboard">
                     Dashboard
                   </NavItem>
+
+                  <NavItem to="/recruiter/applicants">
+                    View Applicants
+                  </NavItem>
+
                   <NavItem to="/profile">
                     Company Profile
                   </NavItem>
                 </>
-              ) : (
-                <NavItem to="/profile">Profile</NavItem>
               )}
 
-              {/* LOGOUT BUTTON */}
+              {/* JOB SEEKER NAV */}
+              {user?.role !== "recruiter" && (
+                <>
+                  <NavItem to="/profile">Profile</NavItem>
+                  <NavItem to="/my-applications">
+                    My Applications
+                  </NavItem>
+                </>
+              )}
+
+              {/* LOGOUT */}
               <button
                 onClick={handleLogout}
-                className="ml-2 bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-md text-sm font-medium transition"
+                className="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-md text-sm font-medium transition"
               >
                 Logout
               </button>

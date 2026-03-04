@@ -2,10 +2,22 @@ const express = require("express");  //This file defines the API endpoint that a
 const router = express.Router();
 
 const auth = require("../middleware/authMiddleware");
-const { applyToJob } = require("../controllers/applicationController");
+const { applyToJob,getMyApplications,getApplicantsForJob,updateApplicationStatus,getAllApplicantsForRecruiter } = require("../controllers/applicationController");
 
-/* ================= APPLY ================= */
-router.post("/apply/:jobId", auth, applyToJob);  //POST /api/applications/apply/:jobId
+router.post("/apply/:jobId", auth, applyToJob);
+
+/* JOB SEEKER */
+router.get("/my-applications", auth, getMyApplications);
+
+/* RECRUITER (PER JOB) */
+router.get("/job/:jobId", auth, getApplicantsForJob);
+
+/* RECRUITER (ALL JOBS) */
+router.get("/recruiter/all", auth, getAllApplicantsForRecruiter);
+
+/* UPDATE STATUS */
+router.put("/:applicationId/status", auth, updateApplicationStatus);
+
 
 module.exports = router;
  //wnen frontend clicks apply
