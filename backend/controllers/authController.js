@@ -138,7 +138,8 @@ exports.resendVerification = async (req, res) => {
     tempUser.token = newToken;
     await tempUser.save();
 
-    const verifyLink = `http://localhost:5000/api/auth/verify-email/${newToken}`;
+    // const verifyLink = `http://localhost:5000/api/auth/verify-email/${newToken}`;
+    const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${newToken}`;
 
     await sendEmail(
       normalizedEmail,
