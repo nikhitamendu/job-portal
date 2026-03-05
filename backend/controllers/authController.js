@@ -52,7 +52,8 @@ exports.register = async (req, res) => {
       role: selectedRole   // 🔥 IMPORTANT
     });
 
-    const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
+    // const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
+    const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${token}`;
 
     await sendEmail(
       email,
