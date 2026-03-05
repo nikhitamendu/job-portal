@@ -6,7 +6,7 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
-const { createJob,getJobs,getJobById,getMyJobs,deleteJob ,notifyMatchingCandidates} = require("../controllers/jobController");   //save the job in db
+const { createJob,getJobs,getJobById,getMyJobs,deleteJob} = require("../controllers/jobController");   //save the job in db
 /* ================= GET ALL JOBS ================= */
 router.get("/", getJobs);   //any one access no login required  //used for home pages and job listing pages
 
@@ -48,12 +48,6 @@ router.post(  //middleware pipeline ...it does not go directly to controller it 
   
 );
 
-router.post(
-  "/:id/notify",
-  auth,
-  authorizeRoles("recruiter"),
-  notifyMatchingCandidates
-);
 
 
 module.exports = router;

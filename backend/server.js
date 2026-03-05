@@ -18,7 +18,6 @@ app.use(express.json());  //converts frontend json req in js object
 app.use(
   cors({
     origin: "http://localhost:5173",
-    // origin:"https://job-portal-frontend-y6bm.onrender.com",
     credentials: true,
   })//react localhost:5173backend:local host 5000
   //since frontend and backend run on different ports,browser blocks request due to some origing policy.so i enabled cors to all react to communicare with bACJEND

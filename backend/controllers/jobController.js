@@ -249,66 +249,8 @@ const updateJob = async (req, res) => {
   }
 };
 
-//for sending mails to users
-/* ================= NOTIFY MATCHING CANDIDATES ================= */
 
-const notifyMatchingCandidates = async (req, res) => {
-  try {
-
-    const jobId = req.params.id;
-
-    const job = await Job.findById(jobId);
-
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    const jobSkills = job.skillsRequired;
-
-    // find users with matching skills
-    const users = await User.find({
-      role: "user",
-      skills: { $in: jobSkills }  
-    });
-
-    if (users.length === 0) {
-      return res.json({
-        message: "No matching candidates found"
-      });
-    }
-
-    // send emails
-    for (const user of users) {   
-
-      await transporter.sendMail({
-        from: process.env.EMAIL,
-        to: user.email,
-        subject: `New Job Opportunity: ${job.title}`,
-        html: `
-          <h2>New Job Matching Your Skills</h2>
-          <p>Hello ${user.name},</p>
-          <p>A new job that matches your skills has been posted.</p>
-
-          <p><b>Job Title:</b> ${job.title}</p>
-          <p><b>Description:</b> ${job.description}</p>
-
-          <p>Login to the job portal and apply.</p>
-        `
-      });
-
-    }
-
-    res.json({
-      message: `Emails sent to ${users.length} candidates`
-    });
-
-  } catch (error) {
-    console.error("NOTIFY ERROR:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-module.exports = { createJob, getJobs, getJobById,getMyJobs,deleteJob,updateJob,notifyMatchingCandidates };
+module.exports = { createJob, getJobs, getJobById,getMyJobs,deleteJob,updateJob };
 
 
 

@@ -79,7 +79,7 @@ exports.register = async (req, res) => {
 ===================================================== */
 exports.verifyEmail = async (req, res) => {
   try {
-    //router.get("/verify/:token",verifyEmail)
+    // router.get("/verify/:token",verifyEmail)
     //when user clicks the link it comes to req.params
     const { token } = req.params;
 
