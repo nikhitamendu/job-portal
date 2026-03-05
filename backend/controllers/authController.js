@@ -220,8 +220,8 @@ exports.login = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // true in production
-      sameSite: "lax",
+      secure: true, // true in production
+      sameSite: "none",
       path: "/"
     });
 
