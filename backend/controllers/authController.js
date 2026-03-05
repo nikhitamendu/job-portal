@@ -222,7 +222,9 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: true, // true in production
       sameSite: "none",
-      path: "/"
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+
     });
 
     return res.status(200).json({
@@ -272,7 +274,8 @@ exports.refreshToken = async (req, res) => {
 exports.logout = (req, res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    sameSite: "lax",
+    secure:true,
+    sameSite: "none",
     path: "/"
   });
 
