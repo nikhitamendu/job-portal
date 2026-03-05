@@ -82,7 +82,7 @@ router.post(
   }
 );
 
- //User uploads resume>>Multer stores file in memory>>GridFS upload stream created
+//User uploads resume>>Multer stores file in memory>>GridFS upload stream created
 //>>File written into MongoDB chunks>>Mongo generates fileId>>fileId saved in User document
 //>>Success response sent
 /* =====================================================
@@ -199,30 +199,92 @@ router.delete("/delete-profile-pic", authMiddleware, async (req, res) => {
 });
 
 /* =====================================================
-   DOWNLOAD ANY FILE (Resume or Profile Pic)
+   DOWNLOAD ANY FILE (Resume or Profile Pic)  downloading the file
+===================================================== */
+
+// router.get("/file/:id", async (req, res) => {
+//   try {
+//     const bucket = req.app.locals.bucket;
+//     const fileId = new mongoose.Types.ObjectId(req.params.id);  //url gives string 
+//     //but mongodb needs objectid (4132) so conversion is required
+
+//     const files = await bucket.find({ _id: fileId }).toArray();
+//     if (!files || files.length === 0) {
+//       return res.status(404).json({ message: "File not found" });
+//     }
+
+//     const file = files[0];
+
+//     res.set({
+//       "Content-Type": file.contentType, "Content-Disposition": `inline; filename="${file.filename}"`,
+//     });//it tells browser how to handle file
+//     //img/png>>show img, appli/pdf>>open pdf without this browser downloads garbage data
+//     const downloadStream = bucket.openDownloadStream(fileId);
+
+//     // Handle stream errors
+//     downloadStream.on("error", (err) => {
+//       console.error("GRIDFS DOWNLOAD ERROR:", err);
+//       return res.status(500).json({
+//         message: "Error downloading file"
+//       });
+//     });
+
+//     // Pipe file stream directly to response
+//     downloadStream.pipe(res);
+
+//   } catch (err) {
+//     console.error("FILE FETCH ERROR:", err);
+//     res.status(500).json({
+//       message: "Error retrieving file"
+//     });
+//   }
+// });
+/* =====================================================
+   DOWNLOAD FILE FROM GRIDFS (RESUME / PROFILE PIC)
 ===================================================== */
 
 router.get("/file/:id", async (req, res) => {
   try {
     const bucket = req.app.locals.bucket;
-    const fileId = new mongoose.Types.ObjectId(req.params.id);  //url gives string 
-    //but mongodb needs objectid (4132) so conversion is required
 
+    // Convert URL param → MongoDB ObjectId
+    const fileId = new mongoose.Types.ObjectId(req.params.id);
+
+    // Find file metadata
     const files = await bucket.find({ _id: fileId }).toArray();
+
     if (!files || files.length === 0) {
       return res.status(404).json({ message: "File not found" });
     }
 
-    res.set("Content-Type", files[0].contentType);//it tells browser how to handle file
-//img/png>>show img, appli/pdf>>open pdf without this browser downloads garbage data
+    const file = files[0];
+
+    /* -----------------------------------------
+       Set headers so browser understands file
+    ----------------------------------------- */
+
+    res.setHeader("Content-Type", file.contentType || "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${file.filename}"`
+    );
+
+    // Open download stream from GridFS
     const downloadStream = bucket.openDownloadStream(fileId);
-    downloadStream.pipe(res);  //
+
+    // Handle stream errors
+    downloadStream.on("error", (err) => {
+      console.error("GRIDFS STREAM ERROR:", err);
+      res.status(500).send("Error downloading file");
+    });
+
+    // Pipe MongoDB file stream → browser
+    downloadStream.pipe(res);
 
   } catch (err) {
+    console.error("FILE DOWNLOAD ERROR:", err);
     res.status(500).json({ message: "Error retrieving file" });
   }
 });
-
-
 module.exports = router;
 //Take data coming from one stream and directly send it into another stream”:pipe

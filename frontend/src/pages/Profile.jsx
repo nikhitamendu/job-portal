@@ -204,49 +204,79 @@ const handleDeleteProfilePic = async () => {
       )}
     </Card>
 
-    {/* Experience */}
-    <Card title="Experience" onEdit={() => {
+ {/*experience*/}
+ <Card
+  title="Experience"
+  onEdit={() => {
+    setEditingIndex(null);
+    setEditExperience(true);
+  }}
+>
+
+  {profile.experience?.length === 0 ? (
+    <Empty text="No experience added yet" />
+  ) : (
+    profile.experience.map((e, i) => (
+      <ItemRow
+        key={i}
+        text={`${e.role} • ${e.company} (${e.duration})`}
+        onEdit={() => {
+          setEditingIndex(i);
+          setEditExperience(true);
+        }}
+        onDelete={() => handleDeleteItem("experience", i)}
+      />
+    ))
+  )}
+
+  <button
+    onClick={() => {
       setEditingIndex(null);
       setEditExperience(true);
-    }}>
-      {profile.experience?.length === 0 ? (
-        <Empty text="No experience added yet" />
-      ) : (
-        profile.experience.map((e, i) => (
-          <ItemRow
-            key={i}
-            text={`${e.role} - ${e.company}`}
-            onEdit={() => {
-              setEditingIndex(i);
-              setEditExperience(true);
-            }}
-            onDelete={() => handleDeleteItem("experience", i)}
-          />
-        ))
-      )}
-    </Card>
+    }}
+    className="mt-3 text-blue-600 text-sm"
+  >
+    + Add Experience
+  </button>
+
+</Card>
 
     {/* Education */}
-    <Card title="Education" onEdit={() => {
+   <Card
+  title="Education"
+  onEdit={() => {
+    setEditingIndex(null);
+    setEditEducation(true);
+  }}
+>
+
+  {profile.education?.length === 0 ? (
+    <Empty text="No education added yet" />
+  ) : (
+    profile.education.map((e, i) => (
+      <ItemRow
+        key={i}
+        text={`${e.degree} • ${e.institute} (${e.year})`}
+        onEdit={() => {
+          setEditingIndex(i);
+          setEditEducation(true);
+        }}
+        onDelete={() => handleDeleteItem("education", i)}
+      />
+    ))
+  )}
+
+  <button
+    onClick={() => {
       setEditingIndex(null);
       setEditEducation(true);
-    }}>
-      {profile.education?.length === 0 ? (
-        <Empty text="No education added yet" />
-      ) : (
-        profile.education.map((e, i) => (
-          <ItemRow
-            key={i}
-            text={`${e.degree} - ${e.institute}`}
-            onEdit={() => {
-              setEditingIndex(i);
-              setEditEducation(true);
-            }}
-            onDelete={() => handleDeleteItem("education", i)}
-          />
-        ))
-      )}
-    </Card>
+    }}
+    className="mt-3 text-blue-600 text-sm"
+  >
+    + Add Education
+  </button>
+
+</Card>
 
     {/* Resume */}
     <Card title="Resume">
@@ -320,37 +350,36 @@ const handleDeleteProfilePic = async () => {
         />
       )}
 
-      {isRecruiter && editExperience && (
-        <ExperienceModal
-          data={editingIndex !== null ? profile.experience[editingIndex] : null}
-          onClose={() => setEditExperience(false)}
-          onSave={(form) => {
-            let updated = [...profile.experience];
-            if (editingIndex !== null) updated[editingIndex] = form;
-            else updated.push(form);
+    {!isRecruiter && editExperience && (
+  <ExperienceModal
+    data={editingIndex !== null ? profile.experience[editingIndex] : null}
+    onClose={() => setEditExperience(false)}
+    onSave={(form) => {
+      let updated = [...profile.experience];
+      if (editingIndex !== null) updated[editingIndex] = form;
+      else updated.push(form);
 
-            updateProfile({ experience: updated });
-            setEditExperience(false);
-            setEditingIndex(null);
-          }}
-        />
-      )}
+      updateProfile({ experience: updated });
+      setEditExperience(false);
+      setEditingIndex(null);
+    }}
+  />
+)}
+{!isRecruiter && editEducation && (
+  <EducationModal
+    data={editingIndex !== null ? profile.education[editingIndex] : null}
+    onClose={() => setEditEducation(false)}
+    onSave={(form) => {
+      let updated = [...profile.education];
+      if (editingIndex !== null) updated[editingIndex] = form;
+      else updated.push(form);
 
-      {isRecruiter && editEducation && (
-        <EducationModal
-          data={editingIndex !== null ? profile.education[editingIndex] : null}
-          onClose={() => setEditEducation(false)}
-          onSave={(form) => {
-            let updated = [...profile.education];
-            if (editingIndex !== null) updated[editingIndex] = form;
-            else updated.push(form);
-
-            updateProfile({ education: updated });
-            setEditEducation(false);
-            setEditingIndex(null);
-          }}
-        />
-      )}
+      updateProfile({ education: updated });
+      setEditEducation(false);
+      setEditingIndex(null);
+    }}
+  />
+)}
     </div>
   );
 }
@@ -528,14 +557,24 @@ function SkillsModal({ data, onClose, onSave }) {
   );
 }
 function ExperienceModal({ data, onClose, onSave }) {
-  const [form, setForm] = useState(
-    data || { role: "", company: "", duration: "", desc: "" }
-  );
-
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
-
+ const [form, setForm] = useState({
+  role: "",
+  company: "",
+  duration: "",
+  desc: "",
+});
+ useEffect(() => {
+  if (data) {
+    setForm(data);
+  } else {
+    setForm({
+      role: "",
+      company: "",
+      duration: "",
+      desc: "",
+    });
+  }
+}, [data]);
   return (
     <Modal title="Experience" onClose={onClose} onSave={() => onSave(form)}>
       <Input
@@ -562,14 +601,23 @@ function ExperienceModal({ data, onClose, onSave }) {
   );
 }
 function EducationModal({ data, onClose, onSave }) {
-  const [form, setForm] = useState(
-    data || { degree: "", institute: "", year: "" }
-  );
+  const [form, setForm] = useState({
+  degree: "",
+  institute: "",
+  year: "",
+});
 
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
-
+ useEffect(() => {
+  if (data) {
+    setForm(data);
+  } else {
+    setForm({
+      degree: "",
+      institute: "",
+      year: "",
+    });
+  }
+}, [data]);
   return (
     <Modal title="Education" onClose={onClose} onSave={() => onSave(form)}>
       <Input

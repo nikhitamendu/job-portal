@@ -37,6 +37,7 @@ const MyApplications = () => {
         ) : (
           <div className="space-y-4">
             {applications.map((app) => (
+            
               <div
                 key={app._id}
                 className="bg-white shadow rounded-lg p-6"
