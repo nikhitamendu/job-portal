@@ -1,7 +1,8 @@
 import axios from "axios";
   //This file creates a centralized Axios instance that automatically attaches authentication tokens and connects React to backend APIs.
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  // baseURL: "http://localhost:5000/api",
+  baseURL:"https://job-portal-backend-jtjz.onrender.com",
   withCredentials: true, // for refresh token cookie
 });
 
