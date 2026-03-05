@@ -55,16 +55,16 @@ exports.register = async (req, res) => {
     // const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
     const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${token}`;
 
-    // await sendEmail(
-    //   email,
-    //   "Verify your email - Job Portal",
-    //   `
-    //     <h2>Email Verification</h2>
-    //     <p>Click the link below to complete your registration:</p>
-    //     <a href="${verifyLink}">Verify Email</a>
-    //   `
-    // );
-    console.log("verification link",verifyLink)
+    await sendEmail(
+      email,
+      "Verify your email - Job Portal",
+      `
+        <h2>Email Verification</h2>
+        <p>Click the link below to complete your registration:</p>
+        <a href="${verifyLink}">Verify Email</a>
+      `
+    );
+    // console.log("verification link",verifyLink)
 
     return res.status(200).json({
       message: "Verification email sent. Please verify to complete registration."
@@ -104,7 +104,8 @@ exports.verifyEmail = async (req, res) => {
 
     await TempUser.deleteOne({ _id: tempUser._id });
 
-    return res.redirect("http://localhost:5173/verify-success");
+    // return res.redirect("http://localhost:5173/verify-success");
+    return res.redirect("https://job-portal-frontend-ybpv.onrender.com/verify-success");
   } catch (error) {
     console.error("VERIFY ERROR:", error);
     return res.status(500).json({ message: "Server error" });
