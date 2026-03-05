@@ -53,10 +53,10 @@ exports.register = async (req, res) => {
     });
 
     // const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
-    const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${token}`;
+    const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${newToken}`;
 
     await sendEmail(
-      email,
+      normalizedEmail,
       "Verify your email - Job Portal",
       `
         <h2>Email Verification</h2>
