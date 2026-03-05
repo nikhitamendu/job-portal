@@ -55,15 +55,16 @@ exports.register = async (req, res) => {
     // const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
     const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${token}`;
 
-    await sendEmail(
-      email,
-      "Verify your email - Job Portal",
-      `
-        <h2>Email Verification</h2>
-        <p>Click the link below to complete your registration:</p>
-        <a href="${verifyLink}">Verify Email</a>
-      `
-    );
+    // await sendEmail(
+    //   email,
+    //   "Verify your email - Job Portal",
+    //   `
+    //     <h2>Email Verification</h2>
+    //     <p>Click the link below to complete your registration:</p>
+    //     <a href="${verifyLink}">Verify Email</a>
+    //   `
+    // );
+    console.log("verification link",verifyLink)
 
     return res.status(200).json({
       message: "Verification email sent. Please verify to complete registration."
