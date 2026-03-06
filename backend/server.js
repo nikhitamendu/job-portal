@@ -16,14 +16,30 @@ const { GridFSBucket } = require("mongodb");
 app.use(express.json());  //converts frontend json req in js object
 //supoose frontend sends email:nikjbnjmk backend recieves req.body.email
 
+// app.use(
+//   cors({
+//    origin: ["http://localhost:5173","https://job-portal-frontend-latest.onrender.com"],
+//     credentials: true,
+  // })   //react localhost:5173backend:local host 5000
+  //since frontend and backend run on different ports,browser blocks request due to some origing policy.so i enabled cors to all react to communicare with bACJEND
+// );
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://job-portal-frontend-latest.onrender.com"
+];
+
 app.use(
   cors({
-   origin: ["http://localhost:5173","https://job-portal-frontend-latest.onrender.com"],
-    credentials: true,
-  })//react localhost:5173backend:local host 5000
-  //since frontend and backend run on different ports,browser blocks request due to some origing policy.so i enabled cors to all react to communicare with bACJEND
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  })
 );
-
 app.use(cookieParser());  //used for authentication systems
 
 /* =======================
