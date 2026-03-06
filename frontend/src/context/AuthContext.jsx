@@ -20,15 +20,28 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 🔁 Try refreshing token on page load
+  // const tryRefresh = async () => {
+  //   try {
+  //     const res = await api.post("/auth/refresh");
+  //     setAccessToken(res.data.accessToken);
+  //     return true;
+  //   } catch {
+  //     return false;  //page reloads,access token expired,browser still has cookie ,/auth/refresh gives new access token user stays logged in
+  //   }
+  // };
+
   const tryRefresh = async () => {
-    try {
-      const res = await api.post("/auth/refresh");
-      setAccessToken(res.data.accessToken);
-      return true;
-    } catch {
-      return false;  //page reloads,access token expired,browser still has cookie ,/auth/refresh gives new access token user stays logged in
-    }
-  };
+  try {
+    const res = await api.get("/auth/refresh");
+
+    if (!res.data.accessToken) return false;
+
+    setAccessToken(res.data.accessToken);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
   // 🔐 LOGIN
   const login = async (email, password) => {
