@@ -27,13 +27,19 @@ export default function Register() {
 
     try {
       setLoading(true);
+      // const res = await api.post("/auth/register", form);
+      // toast.success(res.data.message);
+      // setForm({ name: "", email: "", password: "", role: "user" });
       const res = await api.post("/auth/register", form);
-      toast.success(res.data.message);
-      setForm({ name: "", email: "", password: "", role: "user" });
+
+      toast.success("OTP sent to your email");
+
+      // redirect to OTP verification page
+      window.location.href = `/verify-success?email=${form.email}`;
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Registration failed. Please try again."
+        "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -145,15 +151,17 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded-md font-medium text-white transition ${
-              loading
+            className={`w-full py-2 rounded-md font-medium text-white transition ${loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
-            }`}
+              }`}
           >
-            {loading
+            {/* {loading
               ? "Sending verification email..."
-              : "Register"}
+              : "Register"} */}
+              {loading
+  ? "Sending OTP..."
+  : "Register"}
           </button>
         </form>
 

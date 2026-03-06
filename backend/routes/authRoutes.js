@@ -4,9 +4,22 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles");
 //these run before controller executes
+// const {
+//   register,
+//   verifyEmail,
+//   resendVerification,
+//   login,
+//   refreshToken,
+//   logout,
+//   forgotPassword,
+//   verifyOtp,
+//   resetPassword,
+//   resendOtp,
+//   me
+// } = require("../controllers/authController");
 const {
   register,
-  verifyEmail,
+  verifyRegisterOtp,
   resendVerification,
   login,
   refreshToken,
@@ -20,7 +33,8 @@ const {
 
 /* ================= AUTH ================= */
 router.post("/register", register);
-router.get("/verify-email/:token", verifyEmail);
+// router.get("/verify-email/:token", verifyEmail);
+router.post("/verify-register-otp", verifyRegisterOtp);
 router.post("/resend-verification", resendVerification);
 router.post("/login", login);
 router.post("/refresh", refreshToken);

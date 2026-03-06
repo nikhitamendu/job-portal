@@ -1,15 +1,18 @@
-const mongoose = require("mongoose");   
+const mongoose = require("mongoose");
 
 const tempUserSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
-  token: String,
+
+  otp: Number,
+  otpExpires: Date,
+
   role: {
-  type: String,
-  enum: ["user", "recruiter"],
-  default: "user"
-},
+    type: String,
+    enum: ["user", "recruiter"],
+    default: "user"
+  },
 
   createdAt: {
     type: Date,

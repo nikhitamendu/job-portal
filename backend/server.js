@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();  //this line creates backend server object //everu request from frontend first enters app
+app.set("trust proxy", 1); //for deployment for cookies
 const userRoutes = require("./routes/userRoutes");  //require means import the file use means register the routes in express
 const { GridFSBucket } = require("mongodb");
 
@@ -17,7 +18,7 @@ app.use(express.json());  //converts frontend json req in js object
 
 app.use(
   cors({
-   origin: ["http://localhost:5173","https://job-portal-frontend-ybpv.onrender.com"],
+   origin: "http://localhost:5173",
     credentials: true,
   })//react localhost:5173backend:local host 5000
   //since frontend and backend run on different ports,browser blocks request due to some origing policy.so i enabled cors to all react to communicare with bACJEND
@@ -42,7 +43,11 @@ app.use("/api/applications", require("./routes/applicationRoutes"));
 ======================= */
 async function startServer() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);   //we used async await because to connect with database it may take some time and we want to start the server only after the database is connected successfully.
+    // await mongoose.connect(process.env.MONGO_URI)   //we used async await because to connect with database it may take some time and we want to start the server only after the database is connected successfully.
+    await mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
     console.log("MongoDB connected");
 
     const PORT = process.env.PORT || 5000;

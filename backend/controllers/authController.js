@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const TempUser = require("../models/TempUser");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
+// const crypto = require("crypto");
 const jwt = require("jsonwebtoken"); // ✅ FIXED
 const sendEmail = require("../utils/sendEmail");
 
@@ -42,29 +42,41 @@ exports.register = async (req, res) => {
     await TempUser.deleteOne({ email });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const token = crypto.randomBytes(32).toString("hex");  //creates token instead of otp
+    // const token = crypto.randomBytes(32).toString("hex");  //creates token instead of otp
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
     await TempUser.create({
       name,
       email,
       password: hashedPassword,
-      token,
+      // token,
+      otp,
+      otpExpires: Date.now() + 10 * 60 * 1000,
+
       role: selectedRole   // 🔥 IMPORTANT
     });
 
     // const verifyLink = `http://localhost:5000/api/auth/verify-email/${token}`;
-    const verifyLink = `https://job-portal-backend-jtjz.onrender.com/api/auth/verify-email/${token}`;
 
+    // await sendEmail(
+    //   email,
+    //   "Verify your email - Job Portal",
+    //   `
+    //     <h2>Email Verification</h2>
+    //     <p>Click the link below to complete your registration:</p>
+    //     <a href="${verifyLink}">Verify Email</a>
+    //   `
+    // );
     await sendEmail(
-      email,
-      "Verify your email - Job Portal",
-      `
-        <h2>Email Verification</h2>
-        <p>Click the link below to complete your registration:</p>
-        <a href="${verifyLink}">Verify Email</a>
-      `
-    );
-    // console.log("verification link",verifyLink)
+  email,
+  "Verify your email - Job Portal",
+  `
+    <h2>Email Verification</h2>
+    <p>Your OTP for verification is:</p>
+    <h1>${otp}</h1>
+    <p>This OTP will expire in 10 minutes.</p>
+  `
+);
 
     return res.status(200).json({
       message: "Verification email sent. Please verify to complete registration."
@@ -79,18 +91,57 @@ exports.register = async (req, res) => {
 /* =====================================================
    VERIFY EMAIL  for register
 ===================================================== */
-exports.verifyEmail = async (req, res) => {
+// exports.verifyEmail = async (req, res) => {
+//   try {
+//     //router.get("/verify/:token",verifyEmail)
+//     //when user clicks the link it comes to req.params
+//     const { token } = req.params;
+
+//     //req.params is an object in express.js that contains values taken from thr url path
+
+//     const tempUser = await TempUser.findOne({ token });
+//     if (!tempUser) {
+//       return res.status(400).json({
+//         message: "Invalid or expired verification link"
+//       });
+//     }
+
+//     await User.create({
+//       name: tempUser.name,
+//       email: tempUser.email,
+//       password: tempUser.password,
+//       role: tempUser.role || "user",  // 🔥 FIX
+//       isVerified: true
+//     });
+
+//     await TempUser.deleteOne({ _id: tempUser._id });
+
+//     return res.redirect("http://localhost:5173/verify-success");
+//   } catch (error) {
+//     console.error("VERIFY ERROR:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+exports.verifyRegisterOtp = async (req, res) => {
   try {
-    // router.get("/verify/:token",verifyEmail)
-    //when user clicks the link it comes to req.params
-    const { token } = req.params;
+    const { email, otp } = req.body;
 
-    //req.params is an object in express.js that contains values taken from thr url path
+    const tempUser = await TempUser.findOne({
+      email: email.toLowerCase().trim()
+    });
 
-    const tempUser = await TempUser.findOne({ token });
     if (!tempUser) {
       return res.status(400).json({
-        message: "Invalid or expired verification link"
+        message: "No pending registration found"
+      });
+    }
+
+    if (
+      tempUser.otp !== Number(otp) ||
+      tempUser.otpExpires < Date.now()
+    ) {
+      return res.status(400).json({
+        message: "Invalid or expired OTP"
       });
     }
 
@@ -98,23 +149,67 @@ exports.verifyEmail = async (req, res) => {
       name: tempUser.name,
       email: tempUser.email,
       password: tempUser.password,
-      role: tempUser.role || "user",  // 🔥 FIX
+      role: tempUser.role || "user",
       isVerified: true
     });
 
     await TempUser.deleteOne({ _id: tempUser._id });
 
-    // return res.redirect("http://localhost:5173/verify-success");
-    return res.redirect("https://job-portal-frontend-ybpv.onrender.com/verify-success");
+    return res.status(200).json({
+      message: "Email verified successfully. You can now login."
+    });
+
   } catch (error) {
-    console.error("VERIFY ERROR:", error);
+    console.error("VERIFY OTP ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 /* =====================================================
    RESEND EMAIL VERIFICATION  for register
 ===================================================== */
+// exports.resendVerification = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({ message: "Email is required" });
+//     }
+
+//     const normalizedEmail = email.toLowerCase().trim();
+
+//     const tempUser = await TempUser.findOne({ email: normalizedEmail });
+
+//     if (!tempUser) {
+//       return res.status(400).json({
+//         message: "No pending verification found for this email"
+//       });
+//     }
+
+//     // Generate new token
+//     const newToken = crypto.randomBytes(32).toString("hex");
+//     tempUser.token = newToken;
+//     await tempUser.save();
+
+//     const verifyLink = `http://localhost:5000/api/auth/verify-email/${newToken}`;
+
+//     await sendEmail(
+//       normalizedEmail,
+//       "Resend Email Verification - Job Portal",
+//       `
+//         <h2>Email Verification</h2>
+//         <p>Click the link below to verify your email:</p>
+//         <a href="${verifyLink}">Verify Email</a>
+//       `
+//     );
+
+//     return res.status(200).json({
+//       message: "Verification email resent successfully"
+//     });
+//   } catch (error) {
+//     console.error("RESEND VERIFICATION ERROR:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
 exports.resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
@@ -133,33 +228,34 @@ exports.resendVerification = async (req, res) => {
       });
     }
 
-    // Generate new token
-    const newToken = crypto.randomBytes(32).toString("hex");
-    tempUser.token = newToken;
-    await tempUser.save();
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
-    const verifyLink = `http://localhost:5000/api/auth/verify-email/${newToken}`;
-    
+    tempUser.otp = otp;
+    tempUser.otpExpires = Date.now() + 10 * 60 * 1000;
+
+    await tempUser.save();
 
     await sendEmail(
       normalizedEmail,
-      "Resend Email Verification - Job Portal",
+      "Resend OTP - Email Verification",
       `
         <h2>Email Verification</h2>
-        <p>Click the link below to verify your email:</p>
-        <a href="${verifyLink}">Verify Email</a>
+        <p>Your new OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP will expire in 10 minutes.</p>
       `
     );
 
     return res.status(200).json({
-      message: "Verification email resent successfully"
+      message: "OTP resent successfully"
     });
+
   } catch (error) {
-    console.error("RESEND VERIFICATION ERROR:", error);
+    console.error("RESEND OTP ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 ///Login
 
@@ -222,14 +318,18 @@ exports.login = async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user);
 
+    // res.cookie("refreshToken", refreshToken, {
+    //   httpOnly: true,
+    //   secure: false, // true in production
+    //   sameSite: "lax",
+    //   path: "/"
+    // });
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true, // true in production
-      sameSite: "none",
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000
-
-    });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none",
+  path: "/"
+});
 
     return res.status(200).json({
       message: "Login successful",
@@ -275,10 +375,19 @@ exports.refreshToken = async (req, res) => {
 /* =====================================================
    LOGOUT
 ===================================================== */
+// exports.logout = (req, res) => {
+//   res.clearCookie("refreshToken", {
+//     httpOnly: true,
+//     sameSite: "lax",
+//     path: "/"
+//   });
+
+//   return res.status(200).json({ message: "Logged out successfully" });
+// };
 exports.logout = (req, res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure:true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     path: "/"
   });
