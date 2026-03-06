@@ -25,7 +25,7 @@ app.use(express.json());  //converts frontend json req in js object
 // );
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://job-portal-frontend-latest.onrender.com"
+  // "https://job-portal-frontend-latest.onrender.com"
 ];
 
 app.use(
@@ -78,5 +78,4 @@ mongoose.connection.once("open", () => {
 
   app.locals.bucket = bucket;   //stores files (resume )  using gridfs mongodb document =16mb,resume pfd are bigger so we store them as chunks
 });
-
 startServer();
