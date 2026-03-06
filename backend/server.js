@@ -12,18 +12,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   // "https://job-portal-frontend-latest.onrender.com"
 ];
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true
-  })
-);
+app.use(cors({
+  origin:"http://localhost:5173",
+  credentials:true
+}));
 app.use(cookieParser());  
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/protected", require("./routes/protectedRoutes"));
