@@ -1,3 +1,97 @@
+// import { useEffect, useState } from "react";
+// import axios from "axios";
+// import JobCard from "../components/JobCard";
+
+// const Jobs = () => {
+//   const [jobs, setJobs] = useState([]);
+//   const [loading, setLoading] = useState(false);
+
+//   const [filters, setFilters] = useState({
+//     search: "",
+//     city: "",
+//     employmentType: "",
+//     sort: "newest",
+//     page: 1,
+//   });
+
+//  const fetchJobs = async () => {
+//   try {
+//     setLoading(true);
+
+//     const { data } = await axios.get("/api/jobs", {
+//       params: filters,
+//     });
+
+//     console.log("API Response:", data);
+
+//     // Handle both possible structures safely
+//     if (Array.isArray(data)) {
+//       setJobs(data);
+//     } else if (Array.isArray(data.jobs)) {
+//       setJobs(data.jobs);
+//     } else {
+//       setJobs([]);
+//     }
+
+//   } catch (error) {
+//     console.error(error);
+//     setJobs([]);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+//   useEffect(() => {
+//     fetchJobs();
+//   }, [filters]);
+
+//   return (
+//     <div className="min-h-screen bg-gray-100 p-6">
+//       <h1 className="text-3xl font-bold mb-6">Find Your Dream Job</h1>
+
+//       {/* 🔍 SEARCH + SORT SECTION */}
+//       <div className="flex gap-4 mb-6">
+//         <input
+//           type="text"
+//           placeholder="Search jobs..."
+//           className="border p-2 rounded w-full"
+//           value={filters.search}
+//           onChange={(e) =>
+//             setFilters({ ...filters, search: e.target.value, page: 1 })
+//           }
+//         />
+
+//         <select
+//           className="border p-2 rounded"
+//           value={filters.sort}
+//           onChange={(e) =>
+//             setFilters({ ...filters, sort: e.target.value })
+//           }
+//         >
+//           <option value="newest">Newest</option>
+//           <option value="oldest">Oldest</option>
+//           <option value="salaryHigh">Salary High</option>
+//           <option value="salaryLow">Salary Low</option>
+//         </select>
+//       </div>
+
+//       {/* 🧾 JOB LIST */}
+//       {loading ? (
+//         <p>Loading...</p>
+//       ) : jobs.length === 0 ? (
+//         <p>No jobs found.</p>
+//       ) : (
+//         <div className="grid md:grid-cols-3 gap-6">
+//           {jobs.map((job) => (
+//             <JobCard key={job._id} job={job} />
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Jobs;
 import { useEffect, useState } from "react";
 import axios from "axios";
 import JobCard from "../components/JobCard";
@@ -14,79 +108,158 @@ const Jobs = () => {
     page: 1,
   });
 
- const fetchJobs = async () => {
-  try {
-    setLoading(true);
-
-    const { data } = await axios.get("/api/jobs", {
-      params: filters,
-    });
-
-    console.log("API Response:", data);
-
-    // Handle both possible structures safely
-    if (Array.isArray(data)) {
-      setJobs(data);
-    } else if (Array.isArray(data.jobs)) {
-      setJobs(data.jobs);
-    } else {
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get("/api/jobs", { params: filters });
+      console.log("API Response:", data);
+      if (Array.isArray(data)) setJobs(data);
+      else if (Array.isArray(data.jobs)) setJobs(data.jobs);
+      else setJobs([]);
+    } catch (error) {
+      console.error(error);
       setJobs([]);
+    } finally {
+      setLoading(false);
     }
-
-  } catch (error) {
-    console.error(error);
-    setJobs([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchJobs();
   }, [filters]);
 
+  const employmentTypes = ["Full-time", "Part-time", "Internship", "Contract"];
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold mb-6">Find Your Dream Job</h1>
+    <div className="min-h-screen bg-slate-100">
 
-      {/* 🔍 SEARCH + SORT SECTION */}
-      <div className="flex gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search jobs..."
-          className="border p-2 rounded w-full"
-          value={filters.search}
-          onChange={(e) =>
-            setFilters({ ...filters, search: e.target.value, page: 1 })
-          }
-        />
+      {/* ── Hero Banner ── */}
+      <div className="bg-gradient-to-br from-slate-900 via-[#0d2340] to-slate-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-600/10 blur-2xl pointer-events-none" />
 
-        <select
-          className="border p-2 rounded"
-          value={filters.sort}
-          onChange={(e) =>
-            setFilters({ ...filters, sort: e.target.value })
-          }
-        >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="salaryHigh">Salary High</option>
-          <option value="salaryLow">Salary Low</option>
-        </select>
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-10">
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-500/35 rounded-full px-3.5 py-1.5 mb-4">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs font-bold text-blue-300 tracking-widest uppercase">
+              {jobs.length} Jobs Available
+            </span>
+          </div>
+
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
+            Find Your Dream Job
+          </h1>
+          <p className="text-sm text-white/50 mb-6">
+            Browse thousands of opportunities from top companies
+          </p>
+
+          {/* Search bar */}
+          <div className="flex gap-3 max-w-2xl">
+            <div className="flex-1 relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+              <input
+                type="text"
+                placeholder="Search by title, company, or skill…"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-white/15 bg-white/10 text-white placeholder-white/35 outline-none transition-all focus:bg-white/15 focus:border-white/30 backdrop-blur-sm"
+              />
+            </div>
+            <select
+              value={filters.sort}
+              onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
+              className="px-4 py-2.5 text-sm rounded-xl border border-white/15 bg-white/10 text-white/70 outline-none cursor-pointer focus:bg-white/15 backdrop-blur-sm"
+            >
+              <option value="newest"  className="text-slate-900">Newest</option>
+              <option value="oldest"  className="text-slate-900">Oldest</option>
+              <option value="salaryHigh" className="text-slate-900">Salary: High</option>
+              <option value="salaryLow"  className="text-slate-900">Salary: Low</option>
+            </select>
+          </div>
+
+          {/* Filter pills */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {/* All */}
+            <button
+              onClick={() => setFilters({ ...filters, employmentType: "", page: 1 })}
+              className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition cursor-pointer
+                ${filters.employmentType === ""
+                  ? "bg-blue-600 border-blue-500 text-white"
+                  : "bg-white/8 border-white/12 text-white/55 hover:bg-white/12"
+                }`}
+            >
+              All Types
+            </button>
+            {employmentTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilters({ ...filters, employmentType: type, page: 1 })}
+                className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition cursor-pointer
+                  ${filters.employmentType === type
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-white/8 border-white/12 text-white/55 hover:bg-white/12"
+                  }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+        </div>
       </div>
 
-      {/* 🧾 JOB LIST */}
-      {loading ? (
-        <p>Loading...</p>
-      ) : jobs.length === 0 ? (
-        <p>No jobs found.</p>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-6">
-          {jobs.map((job) => (
-            <JobCard key={job._id} job={job} />
-          ))}
-        </div>
-      )}
+      {/* ── Body ── */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
+
+        {/* Results header */}
+        {!loading && jobs.length > 0 && (
+          <p className="text-sm text-slate-400 font-medium mb-5">
+            Showing <span className="text-slate-700 font-bold">{jobs.length}</span> results
+            {filters.search && (
+              <> for <span className="text-blue-700 font-bold">"{filters.search}"</span></>
+            )}
+          </p>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex items-center gap-3 text-slate-400">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm font-medium">Finding jobs…</span>
+            </div>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && jobs.length === 0 && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
+            <div className="text-5xl mb-4">🔍</div>
+            <h3 className="text-base font-bold text-slate-800 mb-1">No jobs found</h3>
+            <p className="text-sm text-slate-400 mb-5">
+              Try adjusting your search or filters to find more results.
+            </p>
+            <button
+              onClick={() => setFilters({ search: "", city: "", employmentType: "", sort: "newest", page: 1 })}
+              className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm shadow-blue-200 cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Grid */}
+        {!loading && jobs.length > 0 && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {jobs.map((job) => (
+              <JobCard key={job._id} job={job} />
+            ))}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };
