@@ -24,6 +24,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/jobs", require("./routes/jobRoutes"));
 app.use("/api/applications", require("./routes/applicationRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/recruiter", require("./routes/recruiterRoutes"));
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGO_URI)

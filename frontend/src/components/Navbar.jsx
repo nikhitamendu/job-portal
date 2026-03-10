@@ -294,6 +294,7 @@ const JOBSEEKER_LINKS = [
 const RECRUITER_LINKS = [
   { to: "/recruiter/dashboard",   label: "Dashboard",      icon: "📊" },
   { to: "/recruiter/applicants",  label: "All Applicants", icon: "👥" },
+  { to: "/recruiter/search",      label: "Find Talent",    icon: "🔍" },
   { to: "/profile",               label: "Profile",        icon: "👤" },
 ];
 

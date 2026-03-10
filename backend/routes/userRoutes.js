@@ -309,6 +309,7 @@ const upload = multer({
 /* ================= PROFILE ROUTES ================= */
 
 router.get("/profile", authMiddleware, getProfile);
+router.get("/profile/:id", authMiddleware, require("../controllers/userController").getProfileById);
 router.put("/profile", authMiddleware, updateProfile);
 
 /* =====================================================

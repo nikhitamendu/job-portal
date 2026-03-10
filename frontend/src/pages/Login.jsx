@@ -148,7 +148,7 @@
 // }
 // //When the user submits the login form, React calls the login function from AuthContext, which sends credentials to the backend using Axios. The backend verifies the email and password using bcrypt, generates JWT access and refresh tokens, and returns the access token. The frontend stores the access token in memory and then fetches user details using /auth/me. Based on the user role, the application redirects to the appropriate dashboard.
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
@@ -160,6 +160,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || null;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -178,13 +180,15 @@ export default function Login() {
   useEffect(() => {
     if (user) {
       console.log("Logged in user:", user);
-      if (user.role === "recruiter") {
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (user.role === "recruiter") {
         navigate("/recruiter/dashboard");
       } else {
         navigate("/profile");
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, from]);
 
   return (
     /* ── Full-page centering wrapper ── */

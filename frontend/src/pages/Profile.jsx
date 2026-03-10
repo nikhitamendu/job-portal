@@ -886,13 +886,17 @@ const FontStyle = () => (
   `}</style>
 );
 
+import { useParams } from "react-router-dom";
+
 /* ══════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════ */
 export default function Profile() {
+  const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [completion, setCompletion] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
+  const [applications, setApplications] = useState([]);
 
   /* Modal states */
   const [modal, setModal] = useState(null); // 'basic' | 'skills' | 'experience' | 'education' | 'social' | 'company'
@@ -908,12 +912,25 @@ export default function Profile() {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const { data } = await axios.get("/applications/my-applications");
+      setApplications(data);
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
-      const { data } = await axios.get("/users/profile");
+      const endpoint = id ? `/users/profile/${id}` : "/users/profile";
+      const { data } = await axios.get(endpoint);
       setProfile(data.user);
       setCompletion(data.completion);
-      fetchNotifications();
+      if (!id) {
+        fetchNotifications();
+        if (data.user.role === "user") fetchApplications();
+      }
     } catch {
       toast.error("Failed to load profile.");
     }
@@ -921,7 +938,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [id]);
 
   if (!profile) return (
     <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -934,6 +951,7 @@ export default function Profile() {
   );
 
   const isRecruiter = profile.role === "recruiter";
+  const isOwner = !id;
 
   const updateProfile = async (fields) => {
     try {
@@ -964,8 +982,9 @@ export default function Profile() {
     const file = e.target.files[0]; if (!file) return;
     const fd = new FormData(); fd.append("resume", file);
     try {
-      await axios.post("/users/upload-resume", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      await fetchProfile(); toast.success(profile.resumeFileId ? "Resume replaced!" : "Resume uploaded!");
+      const { data } = await axios.post("/users/upload-resume", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setProfile(prev => ({ ...prev, resumeFileId: data.resumeFileId, resumeFileName: file.originalname }));
+      toast.success(profile.resumeFileId ? "Resume replaced!" : "Resume uploaded!");
     } catch (err) { toast.error(err.response?.data?.message || "Upload failed."); }
     e.target.value = null;
   };
@@ -1048,36 +1067,57 @@ export default function Profile() {
               </div>
 
               {/* Progress bar */}
-              <div className="progress-wrap">
-                <div className="progress-labels">
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }}>Profile Strength</span>
-                  <span style={{ color: "white", fontSize: 12, fontWeight: 800 }} className="mono">{completion}%</span>
+              {isOwner && (
+                <div className="progress-wrap">
+                  <div className="progress-labels">
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }}>Profile Strength</span>
+                    <span style={{ color: "white", fontSize: 12, fontWeight: 800 }} className="mono">{completion}%</span>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${completion}%` }} />
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginTop: 4 }}>
+                    {completion < 50 ? "Add more details to stand out" : completion < 80 ? "Looking good! Keep going" : "Great profile! 🎉"}
+                  </p>
                 </div>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${completion}%` }} />
-                </div>
-                <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginTop: 4 }}>
-                  {completion < 50 ? "Add more details to stand out" : completion < 80 ? "Looking good! Keep going" : "Great profile! 🎉"}
-                </p>
-              </div>
+              )}
             </div>
 
             {/* Hero actions */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
-              <button
-                className="btn-edit"
-                style={{ background: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.2)", color: "white" }}
-                onClick={() => setModal("basic")}
-              >
-                ✏️ Edit Profile
-              </button>
-              {profile.profilePicFileId && (
-                <button
-                  onClick={handleDeleteProfilePic}
-                  style={{ fontSize: 12, color: "rgba(255,100,100,0.8)", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.2)", padding: "5px 12px", borderRadius: 8, cursor: "pointer" }}
-                >
-                  Remove Photo
-                </button>
+              {isOwner ? (
+                <>
+                  <button
+                    className="btn-edit"
+                    style={{ background: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.2)", color: "white" }}
+                    onClick={() => setModal("basic")}
+                  >
+                    ✏️ Edit Profile
+                  </button>
+                  {profile.profilePicFileId && (
+                    <button
+                      onClick={handleDeleteProfilePic}
+                      style={{ fontSize: 12, color: "rgba(255,100,100,0.8)", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.2)", padding: "5px 12px", borderRadius: 8, cursor: "pointer" }}
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button 
+                    style={{ background: "#2563eb", color: "white", border: "none", padding: "10px 24px", borderRadius: "12px", fontWeight: 700, cursor: "pointer" }}
+                    onClick={() => { /* Quick contact logic later */ }}
+                  >
+                    💬 Contact
+                  </button>
+                  <button 
+                    style={{ background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0", padding: "10px 16px", borderRadius: "12px", fontWeight: 700, cursor: "pointer" }}
+                    onClick={() => window.history.back()}
+                  >
+                    ← Back
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -1109,7 +1149,7 @@ export default function Profile() {
             <div className="card fade-up fade-up-1">
               <div className="card-header">
                 <span className="card-title">Contact</span>
-                <button className="btn-edit" onClick={() => setModal("basic")}>✏️ Edit</button>
+                {isOwner && <button className="btn-edit" onClick={() => setModal("basic")}>✏️ Edit</button>}
               </div>
               <ContactRow icon="✉️" bg="#eff6ff" value={profile.email || "—"} label="Email" />
               <ContactRow icon="📞" bg="#f0fdf4" value={profile.phone || "—"} label="Phone" />
@@ -1125,7 +1165,7 @@ export default function Profile() {
             <div className="card fade-up fade-up-2" style={{ marginTop: "1rem" }}>
               <div className="card-header">
                 <span className="card-title">Social</span>
-                <button className="btn-edit" onClick={() => setModal("social")}>✏️ Edit</button>
+                {isOwner && <button className="btn-edit" onClick={() => setModal("social")}>✏️ Edit</button>}
               </div>
               {profile.linkedin ? (
                 <ContactRow icon="🔗" bg="#eff6ff" value={profile.linkedin} label="LinkedIn" isLink />
@@ -1144,40 +1184,6 @@ export default function Profile() {
               ) : null}
             </div>
 
-            {/* Stats – only for job seekers */}
-            {!isRecruiter && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginTop: "1rem" }}>
-                {[
-                  { num: profile.skills?.length || 0, lbl: "Skills", icon: "⚡" },
-                  { num: profile.experience?.length || 0, lbl: "Jobs", icon: "💼" },
-                  { num: profile.education?.length || 0, lbl: "Degrees", icon: "🎓" },
-                  { num: profile.resumeFileId ? 1 : 0, lbl: "Resume", icon: "📄" },
-                ].map(({ num, lbl, icon }) => (
-                  <div className="stat-box fade-up fade-up-3" key={lbl}>
-                    <div style={{ fontSize: 18, marginBottom: 2 }}>{icon}</div>
-                    <div className="stat-num">{num}</div>
-                    <div className="stat-lbl">{lbl}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Recruiter stats */}
-            {isRecruiter && (
-              <div className="card fade-up fade-up-3" style={{ marginTop: "1rem" }}>
-                <div className="card-header"><span className="card-title">Quick Info</span></div>
-                {[
-                  { label: "Industry", value: profile.industry || "—", icon: "🏭" },
-                  { label: "Company Size", value: profile.companySize || "—", icon: "👥" },
-                  { label: "Member Since", value: profile.createdAt ? new Date(profile.createdAt).getFullYear() : "—", icon: "📅" },
-                ].map(({ label, value, icon }) => (
-                  <div className="recruiter-stat" key={label}>
-                    <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>{icon} {label}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* ── MAIN CONTENT ── */}
@@ -1189,7 +1195,7 @@ export default function Profile() {
                 <div className="card fade-up fade-up-1">
                   <div className="card-header">
                     <span className="card-title">About</span>
-                    <button className="btn-edit" onClick={() => setModal("basic")}>✏️ Edit</button>
+                    {isOwner && <button className="btn-edit" onClick={() => setModal("basic")}>✏️ Edit</button>}
                   </div>
                   {profile.bio ? (
                     <p style={{ fontSize: 14, color: "#334155", lineHeight: 1.7, margin: 0 }}>{profile.bio}</p>
@@ -1203,14 +1209,14 @@ export default function Profile() {
                   <div className="card fade-up fade-up-2" style={{ marginTop: "1rem" }}>
                     <div className="card-header">
                       <span className="card-title">Skills</span>
-                      <button className="btn-edit" onClick={() => setModal("skills")}>+ Add / Edit</button>
+                      {isOwner && <button className="btn-edit" onClick={() => setModal("skills")}>+ Add / Edit</button>}
                     </div>
                     {profile.skills?.length > 0 ? (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {profile.skills.map((skill, i) => (
-                          <span className="skill-chip" key={i}>
+                         <span className="skill-chip" key={i}>
                             {skill}
-                            <span className="del" onClick={() => handleDeleteItem("skills", i)}>✕</span>
+                            {isOwner && <span className="del" onClick={() => handleDeleteItem("skills", i)}>✕</span>}
                           </span>
                         ))}
                       </div>
@@ -1223,11 +1229,31 @@ export default function Profile() {
                   <div className="card fade-up fade-up-3" style={{ marginTop: "1rem" }}>
                     <div className="card-header">
                       <span className="card-title">Recent Experience</span>
-                      <button className="btn-edit" onClick={() => setActiveTab("experience")}>View All →</button>
+                      {!isOwner ? (
+                        <button className="btn-edit" onClick={() => setActiveTab("experience")}>View All →</button>
+                      ) : (
+                         <button className="btn-edit" onClick={() => setActiveTab("experience")}>View All →</button>
+                      )}
                     </div>
                     {profile.experience.slice(0, 2).map((e, i) => (
                       <TimelineItem key={i} type="work" primary={e.role} secondary={e.company} meta={e.duration} desc={e.desc} />
                     ))}
+                  </div>
+                )}
+
+                {/* Job Seeker: Application Summary */}
+                {isOwner && !isRecruiter && (
+                  <div className="card fade-up fade-up-4" style={{ marginTop: "1rem" }}>
+                    <div className="card-header">
+                      <span className="card-title">Job Applications Summary</span>
+                      <button className="btn-edit" onClick={() => setActiveTab("activity")}>View Feed</button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "10px", marginTop: "10px" }}>
+                      <StatusCountCard label="Total" count={applications.length} color="#6366f1" />
+                      <StatusCountCard label="Shortlisted" count={applications.filter(a => a.status === "Shortlisted").length} color="#10b981" />
+                      <StatusCountCard label="Pending" count={applications.filter(a => a.status === "Applied" || a.status === "Reviewed").length} color="#f59e0b" />
+                      <StatusCountCard label="Rejected" count={applications.filter(a => a.status === "Rejected").length} color="#ef4444" />
+                    </div>
                   </div>
                 )}
 
@@ -1236,7 +1262,7 @@ export default function Profile() {
                   <div className="card fade-up fade-up-2" style={{ marginTop: "1rem" }}>
                     <div className="card-header">
                       <span className="card-title">Company Overview</span>
-                      <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>
+                      {isOwner && <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>}
                     </div>
                     <div className="info-grid">
                       <InfoField label="Company Name" value={profile.companyName || "—"} />
@@ -1262,7 +1288,7 @@ export default function Profile() {
                 <div className="card fade-up fade-up-1">
                   <div className="card-header">
                     <span className="card-title">Work Experience</span>
-                    <button className="btn-edit" onClick={() => { setEditingIndex(null); setModal("experience"); }}>+ Add Experience</button>
+                    {isOwner && <button className="btn-edit" onClick={() => { setEditingIndex(null); setModal("experience"); }}>+ Add Experience</button>}
                   </div>
                   {profile.experience?.length > 0 ? (
                     profile.experience.map((e, i) => (
@@ -1270,8 +1296,8 @@ export default function Profile() {
                         key={i} type="work"
                         primary={e.role} secondary={e.company}
                         meta={e.duration} desc={e.desc}
-                        onEdit={() => { setEditingIndex(i); setModal("experience"); }}
-                        onDelete={() => handleDeleteItem("experience", i)}
+                        onEdit={isOwner ? () => { setEditingIndex(i); setModal("experience"); } : null}
+                        onDelete={isOwner ? () => handleDeleteItem("experience", i) : null}
                       />
                     ))
                   ) : (
@@ -1291,7 +1317,7 @@ export default function Profile() {
                 <div className="card fade-up fade-up-1">
                   <div className="card-header">
                     <span className="card-title">Education</span>
-                    <button className="btn-edit" onClick={() => { setEditingIndex(null); setModal("education"); }}>+ Add Education</button>
+                    {isOwner && <button className="btn-edit" onClick={() => { setEditingIndex(null); setModal("education"); }}>+ Add Education</button>}
                   </div>
                   {profile.education?.length > 0 ? (
                     profile.education.map((e, i) => (
@@ -1299,8 +1325,8 @@ export default function Profile() {
                         key={i} type="edu"
                         primary={e.degree} secondary={e.institute}
                         meta={e.year}
-                        onEdit={() => { setEditingIndex(i); setModal("education"); }}
-                        onDelete={() => handleDeleteItem("education", i)}
+                        onEdit={isOwner ? () => { setEditingIndex(i); setModal("education"); } : null}
+                        onDelete={isOwner ? () => handleDeleteItem("education", i) : null}
                       />
                     ))
                   ) : (
@@ -1354,7 +1380,7 @@ export default function Profile() {
                           </p>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
-                          <button className="btn-danger" onClick={handleDeleteResume}>🗑 Delete</button>
+                          {isOwner && <button className="btn-danger" onClick={handleDeleteResume}>🗑 Delete</button>}
                         </div>
                       </div>
                     </div>
@@ -1368,21 +1394,34 @@ export default function Profile() {
                     </div>
                   )}
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <label className="btn-primary" style={{ display: "inline-flex", cursor: "pointer", margin: 0, padding: "10px 24px" }}>
-                      {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
-                      <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} style={{ display: "none" }} />
-                    </label>
-                    {profile.resumeFileId && (
+                  {isOwner && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <label className="btn-primary" style={{ display: "inline-flex", cursor: "pointer", margin: 0, padding: "10px 24px" }}>
+                        {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
+                        <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} style={{ display: "none" }} />
+                      </label>
+                      {profile.resumeFileId && (
+                        <a
+                          href={`${import.meta.env.VITE_API_URL}/users/file/${profile.resumeFileId}`}
+                          download={`${profile.name.replace(/\s+/g, '_')}_Resume.pdf`}
+                          style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}
+                        >
+                          Download PDF
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {!isOwner && profile.resumeFileId && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <a
                         href={`${import.meta.env.VITE_API_URL}/users/file/${profile.resumeFileId}`}
                         download={`${profile.name.replace(/\s+/g, '_')}_Resume.pdf`}
-                        style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}
+                        style={{ background: "#2563eb", color: "white", padding: "10px 24px", borderRadius: "10px", fontWeight: 700, textDecoration: "none" }}
                       >
-                        Download PDF
+                        📥 Download Resume
                       </a>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 12 }}>
                     Preferred format: <b>PDF</b> (Max 5MB)
                   </p>
@@ -1395,7 +1434,7 @@ export default function Profile() {
               <div className="card fade-up fade-up-1">
                 <div className="card-header">
                   <span className="card-title">Company Details</span>
-                  <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>
+                  {isOwner && <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>}
                 </div>
                 <div className="info-grid" style={{ marginBottom: 20 }}>
                   <InfoField label="Company Name" value={profile.companyName || "—"} />
@@ -1507,6 +1546,15 @@ export default function Profile() {
 /* ══════════════════════════════════════════════
    REUSABLE DISPLAY COMPONENTS
 ══════════════════════════════════════════════ */
+
+function StatusCountCard({ label, count, color }) {
+  return (
+    <div style={{ background: "white", padding: "12px", borderRadius: "12px", border: "1px solid var(--border)", textAlign: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+      <p style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)", textTransform: "uppercase", margin: "0 0 4px 0" }}>{label}</p>
+      <p style={{ fontSize: "20px", fontWeight: "800", color: color, margin: 0 }}>{count}</p>
+    </div>
+  );
+}
 
 function ContactRow({ icon, bg, label, value, isLink }) {
   return (

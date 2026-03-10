@@ -3,45 +3,20 @@ import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import api from "../services/api";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
-const NotificationStyles = () => (
-  <style>{`
-    .notif-page {
-      min-h-screen bg-slate-50 py-12 px-6;
-    }
-    .notif-container {
-      max-width: 800px; margin: 0 auto;
-    }
-    .notif-card {
-      background: white; border-radius: 20px; border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden;
-    }
-    .notif-item {
-      padding: 20px; border-bottom: 1px solid #f1f5f9;
-      display: flex; gap: 16px; transition: background 0.2s;
-    }
-    .notif-item:hover { background: #f8fafc; }
-    .notif-item.unread { background: #eff6ff; }
-    .notif-item:last-child { border-bottom: none; }
-    
-    .notif-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; alignItems: center; justifyContent: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-  `}</style>
-);
-
-export default function Notifications() {
+const Notifications = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all"); // 'all' | 'unread'
 
   const fetchNotifications = async () => {
     try {
       const { data } = await api.get("/notifications");
       setNotifications(data.notifications);
     } catch (err) {
-      toast.error("Failed to load notifications");
+      toast.error("Failed to load activity.");
     } finally {
       setLoading(false);
     }
@@ -49,116 +24,168 @@ export default function Notifications() {
 
   useEffect(() => {
     fetchNotifications();
-    // Mark all as read when visiting the page
-    api.put("/notifications/mark-read/all").catch(() => {});
   }, []);
+
+  const handleMarkRead = async (id) => {
+    try {
+      await api.put(`/notifications/mark-read/${id}`);
+      setNotifications(notifications.map(n => n._id === id ? { ...n, read: true } : n));
+    } catch (err) { }
+  };
 
   const handleDelete = async (id) => {
     try {
       await api.delete(`/notifications/${id}`);
       setNotifications(notifications.filter(n => n._id !== id));
-      toast.success("Notification deleted");
+      toast.success("Notification removed");
     } catch (err) {
-      toast.error("Failed to delete notification");
+      toast.error("Delete failed");
     }
   };
 
+  const filteredNotifs = filter === "unread" ? notifications.filter(n => !n.read) : notifications;
+
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-[60vh]">
       <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="bg-slate-50 min-h-screen py-12 px-4 sm:px-6">
-      <NotificationStyles />
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Notifications</h1>
-            <p className="text-slate-500 mt-1">Stay updated with your latest activity</p>
-          </div>
-          <div className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg shadow-blue-400/30">
-            {notifications.length} Total
-          </div>
-        </div>
+    <div style={{ minHeight: "100vh", background: "#f3f2ef", padding: "32px 20px" }}>
+      <style>{`
+        .notif-wrapper { max-width: 1128px; margin: 0 auto; display: grid; grid-template-columns: 225px 1fr 290px; gap: 24px; }
+        @media (max-width: 992px) { .notif-wrapper { grid-template-columns: 1fr; } .notif-left, .notif-right { display: none; } }
+        
+        .side-card { background: white; border-radius: 10px; border: 1px solid #e0e0e0; overflow: hidden; }
+        .feed-container { display: flex; flex-direction: column; gap: 8px; }
+        
+        .notif-card { background: white; border: 1px solid #e0e0e0; border-radius: 10px; display: flex; gap: 12px; padding: 16px; transition: background 0.2s; }
+        .notif-card:hover { background: #f8f8f8; }
+        .notif-card.unread { background: #eff6ff; border-left: 4px solid #0a66c2; }
+        
+        .icon-box { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-center; font-size: 20px; flex-shrink: 0; background: #f3f2ef; }
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-text { font-size: 14px; color: rgba(0,0,0,0.9); line-height: 1.4; margin: 0; }
+        .notif-time { font-size: 12px; color: rgba(0,0,0,0.6); margin-top: 4px; }
+        
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid #0a66c2; color: #0a66c2; font-weight: 600; font-size: 14px; cursor: pointer; background: white; transition: all 0.2s; }
+        .filter-btn.active { background: #0a66c2; color: white; }
+        .filter-btn:hover { background: #0a66c21a; }
+      `}</style>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-          {notifications.length === 0 ? (
-            <div className="py-20 text-center">
-              <div className="text-6xl mb-4">🔔</div>
-              <h3 className="text-xl font-bold text-slate-800">No notifications yet</h3>
-              <p className="text-slate-500 mt-2">When you get updates, they'll show up here.</p>
-              <Link to="/jobs" className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
-                Browse Jobs
-              </Link>
+      <div className="notif-wrapper">
+        {/* LEFT COLUMN: MINI PROFILE */}
+        <aside className="notif-left">
+          <div className="side-card">
+            <div style={{ height: 54, background: "#a0b4b7" }} />
+            <div style={{ padding: "0 12px 16px", marginTop: -30, textAlign: "center" }}>
+              <div style={{ width: 72, height: 72, border: "2px solid white", borderRadius: "50%", background: "#eee", margin: "0 auto", overflow: "hidden" }}>
+                {user?.profilePicFileId ? (
+                  <img src={`${import.meta.env.VITE_API_URL}/users/file/${user.profilePicFileId}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "#666" }}>{user?.name?.[0]}</div>
+                )}
+              </div>
+              <h3 style={{ margin: "12px 0 4px", fontSize: 16, fontWeight: 700 }}>{user?.name}</h3>
+              <p style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", margin: 0 }}>{user?.jobTitle || "Job Hub User"}</p>
+            </div>
+            <div style={{ borderTop: "1px solid #e0e0e0", padding: 12 }}>
+              <div className="flex justify-between text-xs font-bold text-gray-500">
+                <span>Total Notifications</span>
+                <span className="text-blue-600">{notifications.length}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* CENTER COLUMN: FEED */}
+        <main className="feed-container">
+          <div className="side-card" style={{ padding: 16, display: "flex", gap: 8, marginBottom: 8 }}>
+            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
+            <button className={`filter-btn ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>Unread</button>
+          </div>
+
+          {filteredNotifs.length === 0 ? (
+            <div className="side-card" style={{ padding: 40, textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🔔</div>
+              <h3 style={{ fontSize: 18, fontWeight: 700 }}>No notifications found</h3>
+              <p style={{ color: "rgba(0,0,0,0.6)", marginTop: 4 }}>We'll let you know when something important happens.</p>
             </div>
           ) : (
-            notifications.map((notif) => (
+            filteredNotifs.map(notif => (
               <div 
                 key={notif._id} 
-                className={`p-6 border-b border-slate-100 flex gap-4 transition-colors ${!notif.read ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}
+                className={`notif-card ${!notif.read ? 'unread' : ''}`}
+                onMouseEnter={() => !notif.read && handleMarkRead(notif._id)}
               >
-                <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner flex-shrink-0"
-                  style={{ background: getIconBg(notif.type) }}
-                >
+                <div className="icon-box">
                   {getIcon(notif.type)}
                 </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-slate-800 leading-relaxed ${!notif.read ? 'font-bold' : 'font-medium'}`}>
-                      {notif.message}
-                    </p>
-                    <button 
-                      onClick={() => handleDelete(notif._id)}
-                      className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                      title="Delete"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 mt-3">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
-                      🕒 {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
-                    </span>
-                    {notif.link && (
-                      <Link 
-                        to={notif.link}
-                        className="text-xs font-extrabold text-blue-600 hover:text-blue-700 underline underline-offset-4"
-                      >
-                        View Details →
-                      </Link>
-                    )}
-                  </div>
+                <div className="notif-body">
+                  <p className="notif-text">
+                    {notif.message}
+                  </p>
+                  <p className="notif-time">
+                    {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                  </p>
+                  {notif.link && (
+                    <Link to={notif.link} style={{ display: "inline-block", marginTop: 8, fontSize: 14, fontWeight: 600, color: "#0a66c2", textDecoration: "none" }}>
+                      View Details
+                    </Link>
+                  )}
                 </div>
+                <button 
+                  onClick={() => handleDelete(notif._id)}
+                  style={{ background: "none", border: "none", color: "rgba(0,0,0,0.4)", cursor: "pointer", fontSize: 18 }}
+                  title="Delete"
+                >
+                  ✕
+                </button>
               </div>
             ))
           )}
-        </div>
+        </main>
+
+        {/* RIGHT COLUMN: STATS */}
+        <aside className="notif-right">
+          <div className="side-card" style={{ padding: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Activity Insights</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <StatRow label="Applications" value={notifications.filter(n => n.type === 'application').length} />
+              <StatRow label="Outreach" value={notifications.filter(n => n.type === 'outreach').length} />
+              <StatRow label="Job Matches" value={notifications.filter(n => n.type === 'job_match' || n.type === 'new_job').length} />
+            </div>
+          </div>
+          
+          <div className="side-card" style={{ padding: 16, marginTop: 16, textAlign: "center" }}>
+            <p style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", margin: 0 }}>
+              HireHub Premium Insight © 2026
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );
-}
+};
+
+const StatRow = ({ label, value }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <span style={{ fontSize: 13, color: "rgba(0,0,0,0.7)" }}>{label}</span>
+    <span style={{ fontSize: 13, fontWeight: 700, color: "#0a66c2" }}>{value}</span>
+  </div>
+);
 
 function getIcon(type) {
   switch (type) {
     case "application": return "📋";
     case "status_update": return "⚙️";
     case "new_job": return "✨";
+    case "job_match": return "🔥";
+    case "outreach": return "✉️";
     case "message": return "💬";
     default: return "🔔";
   }
 }
 
-function getIconBg(type) {
-  switch (type) {
-    case "application": return "#eff6ff";
-    case "status_update": return "#ecfdf5";
-    case "new_job": return "#fff7ed";
-    case "message": return "#f5f3ff";
-    default: return "#f8fafc";
-  }
-}
+export default Notifications;

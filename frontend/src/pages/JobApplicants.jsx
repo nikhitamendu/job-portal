@@ -42,6 +42,9 @@ const JobApplicants = () => {
 
   const [profileModal, setProfileModal] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
+  const [contactModal, setContactModal] = useState(null);
+  const [emailForm, setEmailForm] = useState({ subject: "", message: "" });
+  const [sending, setSending] = useState(false);
 
   /* ── Fetch ── */
   const fetchApplicants = async () => {
@@ -75,6 +78,25 @@ const JobApplicants = () => {
       toast.error(err.response?.data?.message || "Update failed.");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleContact = async (e) => {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await api.post("/recruiter/contact", {
+        candidateId: contactModal.applicant?._id,
+        subject: emailForm.subject,
+        message: emailForm.message
+      });
+      toast.success(`Message sent to ${contactModal.applicant?.name}!`);
+      setContactModal(null);
+      setEmailForm({ subject: "", message: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send message.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -327,23 +349,37 @@ const JobApplicants = () => {
 
                       {/* Action column */}
                       <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                        <div className="flex gap-2">
+                           <button
+                            onClick={() => setProfileModal(app)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition"
+                          >
+                            👤 Profile
+                          </button>
+                          <button
+                            onClick={() => {
+                              setContactModal(app);
+                              setEmailForm({
+                                subject: `Regarding your application for ${jobTitle}`,
+                                message: `Hi ${app.applicant?.name},\n\nI reviewed your application for the ${jobTitle} position and I'm interested in discussing it further...`
+                              });
+                            }}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                          >
+                            💬 Contact
+                          </button>
+                        </div>
                         {app.applicant?.resumeFileId ? (
                           <a
                             href={`${import.meta.env.VITE_API_URL}/users/file/${app.applicant.resumeFileId}`}
                             download
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition no-underline"
+                            className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition no-underline"
                           >
                             ⬇ Download Resume
                           </a>
                         ) : (
                           <span className="text-xs italic text-slate-400">No resume</span>
                         )}
-                        <button
-                          onClick={() => setProfileModal(app)}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition"
-                        >
-                          👤 Profile
-                        </button>
                       </div>
                     </div>
 
@@ -558,6 +594,60 @@ const JobApplicants = () => {
                 Confirm → {confirmModal.status}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONTACT MODAL ── */}
+      {contactModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={e => e.target === e.currentTarget && setContactModal(null)}
+        >
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 bg-slate-50/50">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Message to Applicant</h3>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{contactModal.applicant?.name}</p>
+              </div>
+              <button onClick={() => setContactModal(null)} className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
+            </div>
+            
+            <form onSubmit={handleContact} className="p-7 space-y-5">
+              <div>
+                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Subject</label>
+                <input
+                  required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-900 text-sm font-semibold focus:border-blue-500 focus:bg-white outline-none transition"
+                  placeholder="Subject of your message"
+                  value={emailForm.subject}
+                  onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Message Body</label>
+                <textarea
+                  required
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-900 text-sm font-semibold focus:border-blue-500 focus:bg-white outline-none transition resize-none"
+                  placeholder="Type your message here..."
+                  value={emailForm.message}
+                  onChange={e => setEmailForm({ ...emailForm, message: e.target.value })}
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={sending}
+                className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {sending ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>📧 Send Secure Email</>
+                )}
+              </button>
+            </form>
           </div>
         </div>
       )}

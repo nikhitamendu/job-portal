@@ -2,6 +2,8 @@
 const Job = require("../models/Job");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
+const sendEmail = require("../utils/sendEmail");
+const { createNotification } = require("./notificationController");
 
 /* ================= CREATE JOB ================= */
 const createJob = async (req, res) => {
@@ -40,10 +42,69 @@ const createJob = async (req, res) => {
     //
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Job created successfully",
       job
     });
+
+    // --- Automatic Matching Logic ---
+    try {
+      const recruiter = await User.findById(req.user._id);
+      if (job.skillsRequired && job.skillsRequired.length > 0) {
+        // Find users with role "user" who have at least ONE matching skill
+        const matchingUsers = await User.find({
+          role: "user",
+          skills: { $in: job.skillsRequired.map(s => s.toLowerCase()) }
+        });
+        console.log(`Matching logic: Found ${matchingUsers.length} users with skills: ${job.skillsRequired}`);
+
+        for (const user of matchingUsers) {
+          console.log(`Sending match alert to: ${user.email}`);
+          // Send In-app Notification
+          await createNotification({
+            recipient: user._id,
+            sender: req.user._id,
+            type: "job_match",
+            message: `New Match! A job for "${job.title}" matching your skills was posted by ${recruiter.companyName || recruiter.name}`,
+            link: `/jobs/${job._id}`,
+          });
+
+          // Send Email
+          const emailHtml = `
+            <div style="font-family: sans-serif; color: #334155; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+              <div style="background: #2563eb; color: white; padding: 24px; text-align: center;">
+                <h2 style="margin: 0; font-size: 20px;">New Job Match Detected!</h2>
+              </div>
+              <div style="padding: 32px; background: white;">
+                <p style="font-size: 16px; margin-bottom: 16px;">Hi <strong>${user.name}</strong>,</p>
+                <p style="margin-bottom: 24px;">We found a new job opening that perfectly matches your skill set!</p>
+                
+                <div style="background: #f8fafc; border-radius: 10px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                  <h3 style="margin: 0 0 8px 0; color: #0f172a;">${job.title}</h3>
+                  <p style="margin: 0 0 4px 0; font-weight: 600; color: #475569;">${recruiter.companyName || "Professional Recruiter"}</p>
+                  <p style="margin: 0 0 12px 0; color: #64748b; font-size: 14px;">📍 ${job.location?.city || "Remote"}, ${job.location?.country || ""}</p>
+                  <p style="margin: 0; color: #334155; font-size: 14px;">${job.description.substring(0, 150)}...</p>
+                </div>
+                
+                <div style="text-align: center;">
+                  <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/jobs/${job._id}" 
+                     style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;">
+                    View & Apply Now
+                  </a>
+                </div>
+              </div>
+              <div style="background: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">
+                You're receiving this because of your matching skills on HireHub.
+              </div>
+            </div>
+          `;
+
+          await sendEmail(user.email, `New Match: ${job.title} at ${recruiter.companyName || recruiter.name}`, emailHtml);
+        }
+      }
+    } catch (notifErr) {
+      console.error("MATCH NOTIFICATION ERROR:", notifErr);
+    }
 
   } catch (error) {
     console.error("CREATE JOB ERROR:", error);

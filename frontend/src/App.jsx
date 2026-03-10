@@ -299,6 +299,7 @@ import MyApplications from "./pages/MyApplications";
 import JobApplicants from "./pages/JobApplicants";
 import RecruiterApplicants from "./pages/RecruiterApplicants";
 import Notifications from "./pages/Notifications";
+import CandidateSearch from "./pages/CandidateSearch";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -421,6 +422,15 @@ export default function App() {
               }
             />
 
+            <Route
+              path="/profile/:id"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
             {/* RECRUITER */}
             <Route
               path="/recruiter/dashboard"
@@ -463,6 +473,15 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <JobApplicants />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/recruiter/search"
+              element={
+                <ProtectedRoute>
+                  <CandidateSearch />
                 </ProtectedRoute>
               }
             />

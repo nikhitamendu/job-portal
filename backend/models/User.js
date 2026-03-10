@@ -166,7 +166,7 @@ companyLocation: {
   type: String,
   trim: true
 },
-    
+
   },
   { timestamps: true }
 );

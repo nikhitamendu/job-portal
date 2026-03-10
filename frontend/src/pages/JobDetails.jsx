@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +8,8 @@ import { useAuth } from "../context/AuthContext";
 const JobDetails = () => {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,12 @@ const JobDetails = () => {
   }, [id, user, authLoading]);
 
   const handleApply = async () => {
+    if (!user) {
+      toast.info("Please login to apply for this job.");
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+
     try {
       setApplying(true);
       const { data } = await api.post(`/applications/apply/${job._id}`);

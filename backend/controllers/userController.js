@@ -163,3 +163,19 @@ res.json({
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* =====================================================
+   GET PROFILE BY ID (For recruiters to view talent)
+===================================================== */
+exports.getProfileById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const completion = calculateCompletion(user);
+    res.json({ user, completion });
+  } catch (error) {
+    console.error("GET PROFILE BY ID ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
