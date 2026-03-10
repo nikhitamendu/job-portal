@@ -104,6 +104,9 @@ const userSchema = new mongoose.Schema(
     resumeFileId: {
       type: mongoose.Schema.Types.ObjectId
     },
+    resumeFileName: {
+      type: String
+    },
 
     gender: {
   type: String,

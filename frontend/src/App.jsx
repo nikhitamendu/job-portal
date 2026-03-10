@@ -298,6 +298,7 @@ import JobDetails from "./pages/JobDetails";
 import MyApplications from "./pages/MyApplications";
 import JobApplicants from "./pages/JobApplicants";
 import RecruiterApplicants from "./pages/RecruiterApplicants";
+import Notifications from "./pages/Notifications";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -399,6 +400,7 @@ export default function App() {
             {/* PUBLIC JOBS */}
             <Route path="/jobs"     element={<Jobs />}       />
             <Route path="/jobs/:id" element={<JobDetails />} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
             {/* JOB SEEKER */}
             <Route

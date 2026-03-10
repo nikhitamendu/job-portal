@@ -344,6 +344,7 @@ router.post(
         try {
           // Save new resume ID
           user.resumeFileId = uploadStream.id;
+          user.resumeFileName = req.file.originalname;
           await user.save();
 
           // Delete old resume AFTER successful save
@@ -394,6 +395,7 @@ router.delete("/delete-resume", authMiddleware, async (req, res) => {
     );
 
     user.resumeFileId = null;
+    user.resumeFileName = null;
     await user.save();
 
     res.json({ message: "Resume deleted successfully" });
@@ -513,6 +515,8 @@ router.get("/file/:id", async (req, res) => {
     res.set({
       "Content-Type": contentType,
       "Content-Disposition": `inline; filename="${file.filename}"`,
+      "Access-Control-Allow-Origin": "http://localhost:5173",
+      "Content-Security-Policy": "frame-ancestors 'self' http://localhost:5173"
     });//it tells browser how to handle file
     //img/png>>show img, appli/pdf>>open pdf without this browser downloads garbage data
 

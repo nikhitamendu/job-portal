@@ -10,11 +10,12 @@ const { GridFSBucket } = require("mongodb");
 app.use(express.json());  //converts frontend json req in js object
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   // "https://job-portal-frontend-latest.onrender.com"
 ];
 app.use(cors({
-  origin:"http://localhost:5173",
-  credentials:true
+  origin: allowedOrigins,
+  credentials: true
 }));
 app.use(cookieParser());  
 app.use("/api/auth", require("./routes/authRoutes"));
@@ -22,6 +23,7 @@ app.use("/api/protected", require("./routes/protectedRoutes"));
 app.use("/api/users", userRoutes);
 app.use("/api/jobs", require("./routes/jobRoutes"));
 app.use("/api/applications", require("./routes/applicationRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGO_URI)
@@ -39,5 +41,6 @@ mongoose.connection.once("open", () => {
     bucketName: "uploads"
   });
   app.locals.bucket = bucket;
+  console.log("GridFS Storage (uploads) initialized");
 });
 startServer();

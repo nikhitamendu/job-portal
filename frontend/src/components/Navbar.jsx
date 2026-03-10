@@ -208,6 +208,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import api from "../services/api";
+import NotificationDropdown from "./NotificationDropdown";
 
 const FontStyle = () => (
   <style>{`
@@ -310,6 +311,9 @@ export default function Navbar() {
   const [searchQuery,  setSearchQuery]  = useState("");
   const [scrolled,     setScrolled]     = useState(false);
   const [appCount,     setAppCount]     = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount,   setUnreadCount]   = useState(0);
+  const [notifOpen,     setNotifOpen]     = useState(false);
 
   const dropdownRef = useRef(null);
   const searchRef   = useRef(null);
@@ -318,7 +322,11 @@ export default function Navbar() {
   const navLinks    = isRecruiter ? RECRUITER_LINKS : JOBSEEKER_LINKS;
 
   /* Close mobile on route change */
-  useEffect(() => { setMobileOpen(false); setUserDropdown(false); }, [location.pathname]);
+  useEffect(() => { 
+    setMobileOpen(false); 
+    setUserDropdown(false);
+    setNotifOpen(false); 
+  }, [location.pathname]);
 
   /* Scroll shadow */
   useEffect(() => {
@@ -338,15 +346,36 @@ export default function Navbar() {
       .catch(() => {});
   }, [isAuthenticated, isRecruiter]);
 
+  /* Fetch Notifications */
+  const fetchNotifications = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const { data } = await api.get("/notifications");
+      setNotifications(data.notifications);
+      setUnreadCount(data.unreadCount);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   /* Close dropdown on outside click */
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setUserDropdown(false);
       if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
+      if (notifRef && notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const notifRef = useRef(null);
 
   const handleLogout = async () => {
     await logout();
@@ -443,6 +472,31 @@ export default function Navbar() {
               </div>
             )}
           </div>
+
+          {/* Notification bell */}
+          {isAuthenticated && (
+            <div ref={notifRef} style={{ position:"relative" }}>
+              <button
+                onClick={() => setNotifOpen(o => !o)}
+                style={{ width:36, height:36, borderRadius:9, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"rgba(255,255,255,0.7)", fontSize:15, transition:"all 0.15s", position: "relative" }}
+                title="Notifications"
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span className="nb-notif-dot" style={{ top: -2, right: -2 }} />
+                )}
+              </button>
+
+              {notifOpen && (
+                <NotificationDropdown
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onRefresh={fetchNotifications}
+                  onClose={() => setNotifOpen(false)}
+                />
+              )}
+            </div>
+          )}
 
           {!isAuthenticated ? (
             /* Guest buttons */

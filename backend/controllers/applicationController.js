@@ -1,6 +1,7 @@
 const Application = require("../models/Application");
 const Job = require("../models/Job");
 const User = require("../models/User");
+const { createNotification } = require("./notificationController");
 
 /* ================= APPLY TO JOB ================= */
 const applyToJob = async (req, res) => {
@@ -29,6 +30,15 @@ const applyToJob = async (req, res) => {
     res.status(201).json({
       message: "Application submitted successfully",
       application,
+    });
+
+    // Notify recruiter
+    await createNotification({
+      recipient: job.postedBy,
+      sender: req.user._id,
+      type: "application",
+      message: `${user.name} applied for your job: ${job.title}`,
+      link: `/recruiter/job/${jobId}/applicants`,
     });
 
   } catch (error) {
@@ -130,6 +140,15 @@ const updateApplicationStatus = async (req, res) => {
     await application.save();
 
     res.json({ message: "Status updated successfully", application });
+
+    // Notify applicant
+    await createNotification({
+      recipient: application.applicant,
+      sender: req.user._id,
+      type: "status_update",
+      message: `Your application for "${application.job.title}" has been updated to: ${status}`,
+      link: "/my-applications",
+    });
 
   } catch (error) {
     console.error("UPDATE STATUS ERROR:", error);

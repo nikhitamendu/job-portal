@@ -737,7 +737,6 @@ export default function RecruiterApplicants() {
   const [jobFilter, setJobFilter] = useState("All");
   const [activeTab, setActiveTab] = useState("All");
 
-  const [resumeModal,  setResumeModal]  = useState(null);
   const [profileModal, setProfileModal] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
 
@@ -1038,12 +1037,13 @@ export default function RecruiterApplicants() {
                       {/* Actions */}
                       <div className="flex flex-col gap-2 items-end flex-shrink-0">
                         {app.applicant?.resumeFileId ? (
-                          <button
-                            onClick={() => setResumeModal({ url: `http://localhost:5000/api/users/file/${app.applicant.resumeFileId}`, name: app.applicant.name })}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                          <a
+                            href={`${import.meta.env.VITE_API_URL}/users/file/${app.applicant.resumeFileId}`}
+                            download
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition no-underline"
                           >
-                            📄 View Resume
-                          </button>
+                            ⬇ Download Resume
+                          </a>
                         ) : (
                           <span className="text-xs italic text-slate-400">No resume</span>
                         )}
@@ -1094,37 +1094,6 @@ export default function RecruiterApplicants() {
           </div>
         )}
       </div>
-
-      {/* ══ RESUME MODAL ══ */}
-      {resumeModal && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={e => e.target === e.currentTarget && setResumeModal(null)}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col"
-            style={{ height: "85vh" }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">📄 Resume</h2>
-                <p className="text-xs text-slate-500 mt-0.5">{resumeModal.name}</p>
-              </div>
-              <div className="flex gap-2">
-                <a href={resumeModal.url} target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
-                  ⬇ Download
-                </a>
-                <button onClick={() => setResumeModal(null)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition">
-                  ✕ Close
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <iframe src={resumeModal.url} title="Resume" className="w-full h-full border-none" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══ FULL PROFILE MODAL ══ */}
       {profileModal && (
@@ -1237,15 +1206,13 @@ export default function RecruiterApplicants() {
 
             <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
               {profileModal.applicant?.resumeFileId && (
-                <button
-                  onClick={() => {
-                    setResumeModal({ url: `http://localhost:5000/api/users/file/${profileModal.applicant.resumeFileId}`, name: profileModal.applicant.name });
-                    setProfileModal(null);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-lg transition"
+                <a
+                  href={`${import.meta.env.VITE_API_URL}/users/file/${profileModal.applicant.resumeFileId}`}
+                  download
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-lg transition no-underline"
                 >
-                  📄 View Resume
-                </button>
+                  ⬇ Download Resume
+                </a>
               )}
               <button onClick={() => setProfileModal(null)}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 px-4 py-2 rounded-lg transition">

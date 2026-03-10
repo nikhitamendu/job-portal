@@ -602,7 +602,9 @@
 //     </div>
 //   );
 // }
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 import axios from "../services/api";
 import { toast } from "react-toastify";
 
@@ -895,18 +897,31 @@ export default function Profile() {
   /* Modal states */
   const [modal, setModal] = useState(null); // 'basic' | 'skills' | 'experience' | 'education' | 'social' | 'company'
   const [editingIndex, setEditingIndex] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => { fetchProfile(); }, []);
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await axios.get("/notifications");
+      setNotifications(data.notifications);
+    } catch (err) {
+      console.error("Error fetching activity:", err);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
       const { data } = await axios.get("/users/profile");
       setProfile(data.user);
       setCompletion(data.completion);
+      fetchNotifications();
     } catch {
       toast.error("Failed to load profile.");
     }
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   if (!profile) return (
     <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -969,6 +984,7 @@ export default function Profile() {
     { id: "experience", label: "Experience", icon: "💼" },
     { id: "education", label: "Education", icon: "🎓" },
     { id: "resume", label: "Resume", icon: "📄" },
+    { id: "activity", label: "Activity", icon: "📊" },
   ];
   const recruiterTabs = [
     { id: "overview", label: "Overview", icon: "◉" },
@@ -1021,13 +1037,13 @@ export default function Profile() {
               {/* Social quick links */}
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                 {profile.linkedin && (
-                  <a href={profile.linkedin} target="_blank" rel="noreferrer" className="social-link">🔗 LinkedIn</a>
+                  <a href={profile.linkedin.startsWith("http") ? profile.linkedin : `https://${profile.linkedin}`} target="_blank" rel="noreferrer" className="social-link">🔗 LinkedIn</a>
                 )}
                 {profile.portfolio && (
-                  <a href={profile.portfolio} target="_blank" rel="noreferrer" className="social-link">🌐 Portfolio</a>
+                  <a href={profile.portfolio.startsWith("http") ? profile.portfolio : `https://${profile.portfolio}`} target="_blank" rel="noreferrer" className="social-link">🌐 Portfolio</a>
                 )}
                 {isRecruiter && profile.companyWebsite && (
-                  <a href={profile.companyWebsite} target="_blank" rel="noreferrer" className="social-link">🌐 Website</a>
+                  <a href={profile.companyWebsite.startsWith("http") ? profile.companyWebsite : `https://${profile.companyWebsite}`} target="_blank" rel="noreferrer" className="social-link">🌐 Website</a>
                 )}
               </div>
 
@@ -1120,6 +1136,11 @@ export default function Profile() {
                 <ContactRow icon="🌐" bg="#f5f3ff" value={profile.portfolio} label="Portfolio" isLink />
               ) : !isRecruiter ? (
                 <p style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic", marginTop: 6 }}>No portfolio added</p>
+              ) : null}
+              {isRecruiter && profile.companyWebsite ? (
+                <ContactRow icon="🌐" bg="#f5f3ff" value={profile.companyWebsite} label="Website" isLink />
+              ) : isRecruiter ? (
+                <p style={{ fontSize: 12, color: "var(--muted)", fontStyle: "italic", marginTop: 6 }}>No website added</p>
               ) : null}
             </div>
 
@@ -1218,10 +1239,11 @@ export default function Profile() {
                       <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>
                     </div>
                     <div className="info-grid">
-                      <InfoField label="Company Name"  value={profile.companyName        || "—"} />
-                      <InfoField label="Industry"      value={profile.industry           || "—"} />
-                      <InfoField label="Company Size"  value={profile.companySize        || "—"} />
-                      <InfoField label="Location"      value={profile.companyLocation    || "—"} />
+                      <InfoField label="Company Name" value={profile.companyName || "—"} />
+                      <InfoField label="Industry" value={profile.industry || "—"} />
+                      <InfoField label="Company Size" value={profile.companySize || "—"} />
+                      <InfoField label="Location" value={profile.companyLocation || "—"} />
+                      <InfoField label="Website" value={profile.companyWebsite || "—"} isLink />
                     </div>
                     {profile.companyDescription && (
                       <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
@@ -1300,40 +1322,70 @@ export default function Profile() {
                     <span className="card-title">Resume / CV</span>
                   </div>
                   {profile.resumeFileId ? (
-                    <>
-                      <div className="resume-box">
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 40, height: 40, background: "#d1fae5", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📄</div>
-                          <div>
-                            <p style={{ fontSize: 14, fontWeight: 700, color: "#065f46", margin: 0 }}>Resume Uploaded</p>
-                            <p style={{ fontSize: 12, color: "#6ee7b7", margin: 0 }}>Your resume is live and visible to recruiters</p>
-                          </div>
+                    <div style={{
+                      display: "flex", flexDirection: "column", gap: 16,
+                      background: "white", borderRadius: "16px", border: "1px solid var(--border)",
+                      padding: "20px", marginBottom: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
+                    }}>
+                      {/* Strength Meter */}
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>Resume Strength</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>85%</span>
+                        </div>
+                        <div style={{ height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: "85%", background: "linear-gradient(90deg, #10b981, #34d399)", borderRadius: 3 }} />
+                        </div>
+                        <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>✨ Great! Your resume is formatted correctly for ATS.</p>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                        <div style={{
+                          width: 56, height: 56, borderRadius: "12px", background: "#fef2f2",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 28, color: "#ef4444", border: "1px solid #fee2e2"
+                        }}>📄</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 15, fontWeight: 700, margin: 0, color: "var(--text)" }}>
+                            {profile.resumeFileName || `${profile.name.replace(/\s+/g, '_')}_Resume.pdf`}
+                          </p>
+                          <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>
+                            Uploaded {profile.updatedAt ? formatDistanceToNow(new Date(profile.updatedAt), { addSuffix: true }) : 'Recently'}
+                          </p>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
-                          <a
-                            href={`http://localhost:5000/api/users/file/${profile.resumeFileId}`}
-                            target="_blank" rel="noreferrer"
-                            className="btn-edit"
-                          >
-                            👁 View
-                          </a>
                           <button className="btn-danger" onClick={handleDeleteResume}>🗑 Delete</button>
                         </div>
                       </div>
-                      <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Want to update? Upload a new file to replace.</p>
-                    </>
+                    </div>
                   ) : (
-                    <div style={{ textAlign: "center", padding: "2rem 0", marginBottom: 16 }}>
-                      <div style={{ fontSize: 48, marginBottom: 10 }}>📂</div>
-                      <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 4 }}>No resume uploaded yet</p>
-                      <p style={{ color: "var(--muted)", fontSize: 12 }}>Upload your CV to apply for jobs faster</p>
+                    <div style={{ textAlign: "center", padding: "3rem 0", marginBottom: 16 }}>
+                      <div style={{ fontSize: 64, marginBottom: 16 }}>📄</div>
+                      <p style={{ color: "var(--text)", fontSize: 16, fontWeight: 700, marginBottom: 4 }}>No Resume Uploaded</p>
+                      <p style={{ color: "var(--muted)", fontSize: 13, maxWidth: "240px", margin: "0 auto 20px" }}>
+                        Upload your CV to let recruiters find you and apply to jobs with one click.
+                      </p>
                     </div>
                   )}
-                  <label className="btn-primary" style={{ display: "inline-flex", cursor: "pointer" }}>
-                    📎 {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
-                    <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} style={{ display: "none" }} />
-                  </label>
-                  <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>Accepted formats: PDF, DOC, DOCX • Max 5MB</p>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <label className="btn-primary" style={{ display: "inline-flex", cursor: "pointer", margin: 0, padding: "10px 24px" }}>
+                      {profile.resumeFileId ? "Replace Resume" : "Upload Resume"}
+                      <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} style={{ display: "none" }} />
+                    </label>
+                    {profile.resumeFileId && (
+                      <a
+                        href={`${import.meta.env.VITE_API_URL}/users/file/${profile.resumeFileId}`}
+                        download={`${profile.name.replace(/\s+/g, '_')}_Resume.pdf`}
+                        style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}
+                      >
+                        Download PDF
+                      </a>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 12 }}>
+                    Preferred format: <b>PDF</b> (Max 5MB)
+                  </p>
                 </div>
               </div>
             )}
@@ -1346,11 +1398,11 @@ export default function Profile() {
                   <button className="btn-edit" onClick={() => setModal("company")}>✏️ Edit</button>
                 </div>
                 <div className="info-grid" style={{ marginBottom: 20 }}>
-                  <InfoField label="Company Name"  value={profile.companyName        || "—"} />
-                  <InfoField label="Industry"      value={profile.industry           || "—"} />
-                  <InfoField label="Company Size"  value={profile.companySize        || "—"} />
-                  <InfoField label="Location"      value={profile.companyLocation    || "—"} />
-                  <InfoField label="Website"       value={profile.companyWebsite     || "—"} isLink />
+                  <InfoField label="Company Name" value={profile.companyName || "—"} />
+                  <InfoField label="Industry" value={profile.industry || "—"} />
+                  <InfoField label="Company Size" value={profile.companySize || "—"} />
+                  <InfoField label="Location" value={profile.companyLocation || "—"} />
+                  <InfoField label="Website" value={profile.companyWebsite || "—"} isLink />
                 </div>
                 {profile.companyDescription && (
                   <div style={{ paddingTop: 16, borderTop: "1px solid var(--border)" }}>
@@ -1361,15 +1413,34 @@ export default function Profile() {
               </div>
             )}
 
-            {/* ── ACTIVITY TAB (Recruiter) ── */}
-            {activeTab === "activity" && isRecruiter && (
+            {/* ── ACTIVITY TAB ── */}
+            {activeTab === "activity" && (
               <div className="card fade-up fade-up-1">
-                <div className="card-header"><span className="card-title">Hiring Activity</span></div>
-                <div style={{ textAlign: "center", padding: "3rem 0" }}>
-                  <div style={{ fontSize: 48, marginBottom: 10 }}>📊</div>
-                  <p style={{ color: "var(--muted)", fontSize: 14 }}>Activity stats coming soon</p>
-                  <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 4 }}>Post jobs to start tracking applications</p>
-                </div>
+                <div className="card-header"><span className="card-title">{isRecruiter ? "Hiring Activity" : "Recent Activity"}</span></div>
+                {notifications.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {notifications.slice(0, 5).map((notif, i) => (
+                      <div key={i} style={{ padding: "12px 0", borderBottom: i === notifications.length - 1 ? "none" : "1px solid var(--border)", display: "flex", gap: 12 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>
+                          {notif.type === "application" ? "📋" : "🔔"}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>{notif.message}</p>
+                          <p style={{ fontSize: 11, color: "var(--muted)", margin: "2px 0 0" }}>{formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <Link to="/notifications" style={{ textAlign: "center", padding: "12px 0 4px", fontSize: 12, fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
+                      View Full Activity Feed →
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "3rem 0" }}>
+                    <div style={{ fontSize: 48, marginBottom: 10 }}>📊</div>
+                    <p style={{ color: "var(--muted)", fontSize: 14 }}>No recent activity</p>
+                    <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 4 }}>Activity from your job posts will show up here</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1533,14 +1604,14 @@ function BasicModal({ data, onClose, onSave }) {
   const isRecruiter = form.role === "recruiter";
   return (
     <ModalShell title="Edit Basic Info" onClose={onClose} onSave={() => onSave(form)}>
-      <Field label="Full Name"  value={form.name  || ""} onChange={set("name")} />
-      <Field label="Job Title"  value={form.jobTitle  || ""} onChange={set("jobTitle")} placeholder={isRecruiter ? "e.g. Senior Recruiter" : "e.g. Frontend Developer"} />
+      <Field label="Full Name" value={form.name || ""} onChange={set("name")} />
+      <Field label="Job Title" value={form.jobTitle || ""} onChange={set("jobTitle")} placeholder={isRecruiter ? "e.g. Senior Recruiter" : "e.g. Frontend Developer"} />
       <Field label="Bio / About" type="textarea" value={form.bio || ""} onChange={set("bio")} placeholder="Write a short bio about yourself…" />
-      <Field label="Phone"      value={form.phone || ""} onChange={set("phone")} placeholder="+91 98765 43210" />
+      <Field label="Phone" value={form.phone || ""} onChange={set("phone")} placeholder="+91 98765 43210" />
       {!isRecruiter && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="City"    value={form.city    || ""} onChange={set("city")}    placeholder="Hyderabad" />
+            <Field label="City" value={form.city || ""} onChange={set("city")} placeholder="Hyderabad" />
             <Field label="Country" value={form.country || ""} onChange={set("country")} placeholder="India" />
           </div>
           <Field label="Gender" value={form.gender || ""} onChange={set("gender")} placeholder="e.g. Male / Female / Other" />
@@ -1555,8 +1626,8 @@ function SocialModal({ data, onClose, onSave }) {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
   return (
     <ModalShell title="Social Links" onClose={onClose} onSave={() => onSave(form)}>
-      <Field label="LinkedIn URL"   value={form.linkedin}  onChange={set("linkedin")}  placeholder="https://linkedin.com/in/yourname" />
-      <Field label="Portfolio URL"  value={form.portfolio} onChange={set("portfolio")} placeholder="https://yourportfolio.com" />
+      <Field label="LinkedIn URL" value={form.linkedin} onChange={set("linkedin")} placeholder="https://linkedin.com/in/yourname" />
+      <Field label="Portfolio URL" value={form.portfolio} onChange={set("portfolio")} placeholder="https://yourportfolio.com" />
     </ModalShell>
   );
 }
@@ -1573,15 +1644,15 @@ function CompanyModal({ data, onClose, onSave }) {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
   return (
     <ModalShell title="Edit Company Info" onClose={onClose} onSave={() => onSave(form)}>
-      <Field label="Company Name"    value={form.companyName}        onChange={set("companyName")}        placeholder="Acme Corp" />
-      <Field label="Industry"        value={form.industry}           onChange={set("industry")}           placeholder="e.g. Technology, Finance" />
+      <Field label="Company Name" value={form.companyName} onChange={set("companyName")} placeholder="Acme Corp" />
+      <Field label="Industry" value={form.industry} onChange={set("industry")} placeholder="e.g. Technology, Finance" />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Field label="Company Size"  value={form.companySize}        onChange={set("companySize")}        placeholder="e.g. 50-200" />
-        <Field label="Location"      value={form.companyLocation}    onChange={set("companyLocation")}    placeholder="City, Country" />
+        <Field label="Company Size" value={form.companySize} onChange={set("companySize")} placeholder="e.g. 50-200" />
+        <Field label="Location" value={form.companyLocation} onChange={set("companyLocation")} placeholder="City, Country" />
       </div>
-      <Field label="Website"         value={form.companyWebsite}     onChange={set("companyWebsite")}     placeholder="https://company.com" />
+      <Field label="Website" value={form.companyWebsite} onChange={set("companyWebsite")} placeholder="https://company.com" />
       <Field label="About Company" type="textarea"
-             value={form.companyDescription} onChange={set("companyDescription")} placeholder="Describe your company…" />
+        value={form.companyDescription} onChange={set("companyDescription")} placeholder="Describe your company…" />
     </ModalShell>
   );
 }
@@ -1591,7 +1662,7 @@ function SkillsModal({ data, onClose, onSave }) {
   return (
     <ModalShell title="Edit Skills" onClose={onClose} onSave={() => onSave(value.split(",").map(s => s.trim()).filter(Boolean))}>
       <Field label="Skills (comma-separated)" value={value} onChange={(e) => setValue(e.target.value)}
-             placeholder="React, Node.js, MongoDB, TypeScript…" />
+        placeholder="React, Node.js, MongoDB, TypeScript…" />
       <p style={{ fontSize: 12, color: "var(--muted)", marginTop: -6 }}>Separate each skill with a comma.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
         {value.split(",").map(s => s.trim()).filter(Boolean).map((s, i) => (
@@ -1607,9 +1678,9 @@ function ExperienceModal({ data, onClose, onSave }) {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
   return (
     <ModalShell title={data ? "Edit Experience" : "Add Experience"} onClose={onClose} onSave={() => onSave(form)}>
-      <Field label="Job Title / Role" value={form.role}     onChange={set("role")}     placeholder="e.g. Frontend Developer" />
-      <Field label="Company"          value={form.company}  onChange={set("company")}  placeholder="e.g. Google" />
-      <Field label="Duration"         value={form.duration} onChange={set("duration")} placeholder="e.g. Jan 2022 – Present" />
+      <Field label="Job Title / Role" value={form.role} onChange={set("role")} placeholder="e.g. Frontend Developer" />
+      <Field label="Company" value={form.company} onChange={set("company")} placeholder="e.g. Google" />
+      <Field label="Duration" value={form.duration} onChange={set("duration")} placeholder="e.g. Jan 2022 – Present" />
       <Field label="Description" type="textarea" value={form.desc} onChange={set("desc")} placeholder="What did you work on? Key achievements…" />
     </ModalShell>
   );
@@ -1620,9 +1691,9 @@ function EducationModal({ data, onClose, onSave }) {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
   return (
     <ModalShell title={data ? "Edit Education" : "Add Education"} onClose={onClose} onSave={() => onSave(form)}>
-      <Field label="Degree / Certification" value={form.degree}    onChange={set("degree")}    placeholder="e.g. B.Tech Computer Science" />
-      <Field label="University / Institute"  value={form.institute} onChange={set("institute")} placeholder="e.g. IIT Hyderabad" />
-      <Field label="Year / Duration"         value={form.year}      onChange={set("year")}      placeholder="e.g. 2018 – 2022" />
+      <Field label="Degree / Certification" value={form.degree} onChange={set("degree")} placeholder="e.g. B.Tech Computer Science" />
+      <Field label="University / Institute" value={form.institute} onChange={set("institute")} placeholder="e.g. IIT Hyderabad" />
+      <Field label="Year / Duration" value={form.year} onChange={set("year")} placeholder="e.g. 2018 – 2022" />
     </ModalShell>
   );
 }
