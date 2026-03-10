@@ -1,123 +1,4 @@
-// import { useEffect, useState, useContext } from "react";
-// import { useParams } from "react-router-dom";
-// import api from "../services/api";
-// import { toast } from "react-toastify";
-// import { useAuth } from "../context/AuthContext";
 
-// const JobDetails = () => {
-//   const { id } = useParams();
-//   const { user } = useAuth();
-
-//   const [job, setJob] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [applying, setApplying] = useState(false);
-//   const [applied, setApplied] = useState(false);
-
-//  const fetchJob = async () => {
-//   try {
-//     const { data } = await api.get(`/jobs/${id}`);
-//     setJob(data);
-//   } catch (error) {
-//     console.error(error);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-// const handleApply = async () => {
-//   try {
-//     setApplying(true);
-
-//     const { data } = await api.post(
-//       `/applications/apply/${job._id}`
-//     );
-
-//     toast.success(data.message);
-//     setApplied(true);
-//   } catch (error) {
-//     toast.error(
-//       error.response?.data?.message || "Application failed"
-//     );
-//   } finally {
-//     setApplying(false);
-//   }
-// };
-
-//   useEffect(() => {
-//     fetchJob();
-//   }, [id]);
-
-//   if (loading) return <p className="p-6">Loading...</p>;
-//   if (!job) return <p className="p-6">Job not found.</p>;
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-6">
-//       <div className="bg-white shadow-lg rounded-xl p-8 max-w-4xl mx-auto">
-
-//         <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
-
-//         <p className="text-gray-600 mb-4">
-//           Posted by {job.postedBy?.name} ({job.postedBy?.email})
-//         </p>
-
-//         <div className="grid grid-cols-2 gap-4 mb-6 text-sm text-gray-700">
-//           <p><strong>Employment:</strong> {job.employmentType}</p>
-//           <p><strong>Workplace:</strong> {job.workplaceType}</p>
-//           <p><strong>Experience:</strong> {job.experienceLevel}</p>
-//           <p>
-//             <strong>Location:</strong> {job.location?.city}, {job.location?.country}
-//           </p>
-//           <p>
-//             <strong>Salary:</strong> ₹{job.salary?.min} - ₹{job.salary?.max}
-//           </p>
-//           <p>
-//             <strong>Deadline:</strong>{" "}
-//             {job.applicationDeadline
-//               ? new Date(job.applicationDeadline).toLocaleDateString()
-//               : "Not specified"}
-//           </p>
-//         </div>
-
-//         <div className="mb-6">
-//           <h2 className="text-xl font-semibold mb-2">Description</h2>
-//           <p className="text-gray-700">{job.description}</p>
-//         </div>
-
-//         {job.requirements && (
-//           <div className="mb-6">
-//             <h2 className="text-xl font-semibold mb-2">Requirements</h2>
-//             <p className="text-gray-700">{job.requirements}</p>
-//           </div>
-//         )}
-
-//         {job.skillsRequired && (
-//           <div className="mb-6">
-//             <h2 className="text-xl font-semibold mb-2">Skills Required</h2>
-//             <p className="text-gray-700">{job.skillsRequired}</p>
-//           </div>
-//         )}
-
-//         {/* APPLY BUTTON */}
-//         {user?.role !== "recruiter" && (
-//           <button
-//             onClick={handleApply}
-//             disabled={applying || applied}
-//             className={`px-6 py-2 rounded-lg text-white transition ${
-//               applied
-//                 ? "bg-green-600 cursor-not-allowed"
-//                 : "bg-blue-600 hover:bg-blue-700"
-//             }`}
-//           >
-//             {applied ? "Applied ✔" : applying ? "Applying..." : "Apply Now"}
-//           </button>
-//         )}
-
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default JobDetails;
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
@@ -126,13 +7,14 @@ import { useAuth } from "../context/AuthContext";
 
 const JobDetails = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
 
+  /* ── Fetch job + check if already applied ── */
   const fetchJob = async () => {
     try {
       const { data } = await api.get(`/jobs/${id}`);
@@ -144,6 +26,29 @@ const JobDetails = () => {
     }
   };
 
+  const checkIfApplied = async () => {
+    try {
+      const { data } = await api.get(`/applications/check/${id}`);
+      setApplied(data.applied); // backend returns { applied: true/false }
+    } catch (error) {
+      // If endpoint doesn't exist yet, fall back silently
+      console.warn("Check-applied endpoint not available:", error);
+    }
+  };
+
+  // Fetch job on mount (public, no auth needed)
+  useEffect(() => {
+    fetchJob();
+  }, [id]);
+
+  // Check applied status only after auth finishes loading
+  useEffect(() => {
+    if (authLoading) return;
+    if (user && user.role !== "recruiter") {
+      checkIfApplied();
+    }
+  }, [id, user, authLoading]);
+
   const handleApply = async () => {
     try {
       setApplying(true);
@@ -151,15 +56,18 @@ const JobDetails = () => {
       toast.success(data.message);
       setApplied(true);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Application failed");
+      // If backend says "already applied", also mark as applied in UI
+      const msg = error.response?.data?.message || "Application failed";
+      if (msg.toLowerCase().includes("already applied")) {
+        setApplied(true);
+        toast.info("You have already applied for this job.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setApplying(false);
     }
   };
-
-  useEffect(() => {
-    fetchJob();
-  }, [id]);
 
   /* ── Loading ── */
   if (loading)
@@ -182,6 +90,32 @@ const JobDetails = () => {
       </div>
     );
 
+  /* ── Apply Button (reused in two places) ── */
+  const ApplyButton = ({ className = "" }) => {
+    if (user?.role === "recruiter") return null;
+    return (
+      <button
+        onClick={handleApply}
+        disabled={applying || applied}
+        className={`flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
+          ${applied
+            ? "bg-emerald-500 text-white cursor-not-allowed shadow-md shadow-emerald-900/30"
+            : applying
+            ? "bg-slate-600 text-white/60 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/40 hover:-translate-y-0.5 cursor-pointer"
+          } ${className}`}
+      >
+        {applied ? (
+          <><span>✓</span> Applied</>
+        ) : applying ? (
+          <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Applying…</>
+        ) : (
+          "Apply Now →"
+        )}
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-100">
 
@@ -191,11 +125,8 @@ const JobDetails = () => {
         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-600/10 blur-2xl pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-8">
-
-          {/* Company + meta row */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
-              {/* Company avatar */}
               <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl flex-shrink-0 border-2 border-white/10">
                 {job.postedBy?.name?.[0]?.toUpperCase() || "?"}
               </div>
@@ -211,29 +142,7 @@ const JobDetails = () => {
                 </p>
               </div>
             </div>
-
-            {/* Apply button in hero */}
-            {user?.role !== "recruiter" && (
-              <button
-                onClick={handleApply}
-                disabled={applying || applied}
-                className={`flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 cursor-pointer
-                  ${applied
-                    ? "bg-emerald-500 text-white cursor-not-allowed shadow-md shadow-emerald-900/30"
-                    : applying
-                    ? "bg-slate-600 text-white/60 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/40 hover:-translate-y-0.5"
-                  }`}
-              >
-                {applied ? (
-                  <><span>✓</span> Applied</>
-                ) : applying ? (
-                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Applying…</>
-                ) : (
-                  "Apply Now →"
-                )}
-              </button>
-            )}
+            <ApplyButton />
           </div>
 
           {/* Quick info pills */}
@@ -246,21 +155,29 @@ const JobDetails = () => {
               { icon: "💰", label: `₹${job.salary?.min?.toLocaleString()} – ₹${job.salary?.max?.toLocaleString()}` },
               job.applicationDeadline && {
                 icon: "⏳",
-                label: `Deadline: ${new Date(job.applicationDeadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`,
+                label: `Deadline: ${new Date(job.applicationDeadline).toLocaleDateString("en-IN", {
+                  day: "numeric", month: "short", year: "numeric",
+                })}`,
               },
             ]
               .filter(Boolean)
               .map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-full px-3 py-1.5"
-                >
+                <div key={i} className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-full px-3 py-1.5">
                   <span className="text-xs">{item.icon}</span>
                   <span className="text-xs font-semibold text-white/65">{item.label}</span>
                 </div>
               ))}
           </div>
 
+          {/* Already applied notice in hero */}
+          {applied && user?.role !== "recruiter" && (
+            <div className="mt-4 inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-4 py-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-xs font-bold text-emerald-300">
+                You have already applied for this job
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -270,18 +187,14 @@ const JobDetails = () => {
         {/* Description */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <SectionTitle icon="📄" title="Job Description" />
-          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-            {job.description}
-          </p>
+          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{job.description}</p>
         </div>
 
         {/* Requirements */}
         {job.requirements && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <SectionTitle icon="✅" title="Requirements" />
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-              {job.requirements}
-            </p>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{job.requirements}</p>
           </div>
         )}
 
@@ -293,22 +206,16 @@ const JobDetails = () => {
               {(Array.isArray(job.skillsRequired)
                 ? job.skillsRequired
                 : job.skillsRequired.split(",")
-              )
-                .map((s) => s.trim())
-                .filter(Boolean)
-                .map((skill, i) => (
-                  <span
-                    key={i}
-                    className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
+              ).map((s) => s.trim()).filter(Boolean).map((skill, i) => (
+                <span key={i} className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full">
+                  {skill}
+                </span>
+              ))}
             </div>
           </div>
         )}
 
-        {/* About the company */}
+        {/* About recruiter */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <SectionTitle icon="🏢" title="About the Recruiter" />
           <div className="flex items-center gap-3 mt-3">
@@ -322,37 +229,36 @@ const JobDetails = () => {
           </div>
         </div>
 
-        {/* Bottom Apply CTA */}
+        {/* Bottom CTA — changes appearance when already applied */}
         {user?.role !== "recruiter" && (
-          <div className="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-2xl p-6 flex items-center justify-between gap-4 shadow-lg shadow-blue-200">
+          <div className={`rounded-2xl p-6 flex items-center justify-between gap-4 shadow-lg transition-all duration-300
+            ${applied
+              ? "bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-200"
+              : "bg-gradient-to-r from-blue-700 to-indigo-700 shadow-blue-200"
+            }`}
+          >
             <div>
-              <p className="text-white font-bold text-base">Interested in this role?</p>
-              <p className="text-white/60 text-sm mt-0.5">
-                Apply now and take the next step in your career.
-              </p>
-            </div>
-            <button
-              onClick={handleApply}
-              disabled={applying || applied}
-              className={`flex-shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 cursor-pointer
-                ${applied
-                  ? "bg-emerald-500 text-white cursor-not-allowed"
-                  : applying
-                  ? "bg-white/20 text-white/60 cursor-not-allowed"
-                  : "bg-white text-blue-700 hover:bg-slate-100 shadow-md hover:-translate-y-0.5"
-                }`}
-            >
               {applied ? (
-                <><span>✓</span> Applied</>
-              ) : applying ? (
-                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Applying…</>
+                <>
+                  <p className="text-white font-bold text-base">✓ Application Submitted!</p>
+                  <p className="text-white/70 text-sm mt-0.5">
+                    The recruiter will review your profile and get back to you.
+                  </p>
+                </>
               ) : (
-                "Apply Now →"
+                <>
+                  <p className="text-white font-bold text-base">Interested in this role?</p>
+                  <p className="text-white/60 text-sm mt-0.5">
+                    Apply now and take the next step in your career.
+                  </p>
+                </>
               )}
-            </button>
+            </div>
+            <ApplyButton
+              className={applied ? "" : "!bg-white !text-blue-700 hover:!bg-slate-100"}
+            />
           </div>
         )}
-
       </div>
     </div>
   );
@@ -362,11 +268,10 @@ function SectionTitle({ icon, title }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <span className="text-base">{icon}</span>
-      <h2 className="text-xs font-bold text-slate-500 tracking-widest uppercase">
-        {title}
-      </h2>
+      <h2 className="text-xs font-bold text-slate-500 tracking-widest uppercase">{title}</h2>
     </div>
   );
 }
 
 export default JobDetails;
+

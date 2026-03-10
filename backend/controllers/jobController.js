@@ -1,3 +1,4 @@
+
 const Job = require("../models/Job");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
@@ -251,7 +252,6 @@ const updateJob = async (req, res) => {
 
 
 module.exports = { createJob, getJobs, getJobById,getMyJobs,deleteJob,updateJob };
-
 
 
 

@@ -1,104 +1,17 @@
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-// import JobCard from "../components/JobCard";
 
-// const Jobs = () => {
-//   const [jobs, setJobs] = useState([]);
-//   const [loading, setLoading] = useState(false);
-
-//   const [filters, setFilters] = useState({
-//     search: "",
-//     city: "",
-//     employmentType: "",
-//     sort: "newest",
-//     page: 1,
-//   });
-
-//  const fetchJobs = async () => {
-//   try {
-//     setLoading(true);
-
-//     const { data } = await axios.get("/api/jobs", {
-//       params: filters,
-//     });
-
-//     console.log("API Response:", data);
-
-//     // Handle both possible structures safely
-//     if (Array.isArray(data)) {
-//       setJobs(data);
-//     } else if (Array.isArray(data.jobs)) {
-//       setJobs(data.jobs);
-//     } else {
-//       setJobs([]);
-//     }
-
-//   } catch (error) {
-//     console.error(error);
-//     setJobs([]);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-//   useEffect(() => {
-//     fetchJobs();
-//   }, [filters]);
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-6">
-//       <h1 className="text-3xl font-bold mb-6">Find Your Dream Job</h1>
-
-//       {/* 🔍 SEARCH + SORT SECTION */}
-//       <div className="flex gap-4 mb-6">
-//         <input
-//           type="text"
-//           placeholder="Search jobs..."
-//           className="border p-2 rounded w-full"
-//           value={filters.search}
-//           onChange={(e) =>
-//             setFilters({ ...filters, search: e.target.value, page: 1 })
-//           }
-//         />
-
-//         <select
-//           className="border p-2 rounded"
-//           value={filters.sort}
-//           onChange={(e) =>
-//             setFilters({ ...filters, sort: e.target.value })
-//           }
-//         >
-//           <option value="newest">Newest</option>
-//           <option value="oldest">Oldest</option>
-//           <option value="salaryHigh">Salary High</option>
-//           <option value="salaryLow">Salary Low</option>
-//         </select>
-//       </div>
-
-//       {/* 🧾 JOB LIST */}
-//       {loading ? (
-//         <p>Loading...</p>
-//       ) : jobs.length === 0 ? (
-//         <p>No jobs found.</p>
-//       ) : (
-//         <div className="grid md:grid-cols-3 gap-6">
-//           {jobs.map((job) => (
-//             <JobCard key={job._id} job={job} />
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Jobs;
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import api from "../services/api";         // ← authenticated instance (in-memory token)
 import JobCard from "../components/JobCard";
+import { useAuth } from "../context/AuthContext";
+
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const Jobs = () => {
+  const { user, loading: authLoading } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [appliedJobIds, setAppliedJobIds] = useState(new Set());
 
   const [filters, setFilters] = useState({
     search: "",
@@ -108,25 +21,46 @@ const Jobs = () => {
     page: 1,
   });
 
+  /* ── Fetch all jobs (public, no auth needed) ── */
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get("/api/jobs", { params: filters });
-      console.log("API Response:", data);
+      const { data } = await axios.get(`${BASE_URL}/jobs`, { params: filters });
       if (Array.isArray(data)) setJobs(data);
       else if (Array.isArray(data.jobs)) setJobs(data.jobs);
       else setJobs([]);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch jobs:", error);
       setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ── Fetch applied job IDs using authenticated api instance ── */
+  /* ── Token is stored in-memory via setAccessToken, NOT localStorage ── */
+  const fetchAppliedJobs = async () => {
+    if (!user || user.role === "recruiter") return;
+    try {
+      const { data } = await api.get("/applications/my-applications"); // token auto-attached by interceptor
+      const ids = new Set(
+        data.map((app) => app.job?._id?.toString()).filter(Boolean)
+      );
+      setAppliedJobIds(ids);
+    } catch (error) {
+      console.error("Failed to fetch applied jobs:", error);
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
   }, [filters]);
+
+  useEffect(() => {
+    // Wait for auth to finish before fetching — avoids race condition on refresh
+    if (authLoading) return;
+    fetchAppliedJobs();
+  }, [user, authLoading]);
 
   const employmentTypes = ["Full-time", "Part-time", "Internship", "Contract"];
 
@@ -172,8 +106,8 @@ const Jobs = () => {
               onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
               className="px-4 py-2.5 text-sm rounded-xl border border-white/15 bg-white/10 text-white/70 outline-none cursor-pointer focus:bg-white/15 backdrop-blur-sm"
             >
-              <option value="newest"  className="text-slate-900">Newest</option>
-              <option value="oldest"  className="text-slate-900">Oldest</option>
+              <option value="newest"     className="text-slate-900">Newest</option>
+              <option value="oldest"     className="text-slate-900">Oldest</option>
               <option value="salaryHigh" className="text-slate-900">Salary: High</option>
               <option value="salaryLow"  className="text-slate-900">Salary: Low</option>
             </select>
@@ -181,7 +115,6 @@ const Jobs = () => {
 
           {/* Filter pills */}
           <div className="flex flex-wrap gap-2 mt-4">
-            {/* All */}
             <button
               onClick={() => setFilters({ ...filters, employmentType: "", page: 1 })}
               className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition cursor-pointer
@@ -220,6 +153,11 @@ const Jobs = () => {
             {filters.search && (
               <> for <span className="text-blue-700 font-bold">"{filters.search}"</span></>
             )}
+            {appliedJobIds.size > 0 && user?.role !== "recruiter" && (
+              <span className="ml-3 text-emerald-600 font-semibold">
+                · {appliedJobIds.size} applied
+              </span>
+            )}
           </p>
         )}
 
@@ -254,7 +192,11 @@ const Jobs = () => {
         {!loading && jobs.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {jobs.map((job) => (
-              <JobCard key={job._id} job={job} />
+              <JobCard
+                key={job._id}
+                job={job}
+                isApplied={appliedJobIds.has(job._id?.toString())}
+              />
             ))}
           </div>
         )}
