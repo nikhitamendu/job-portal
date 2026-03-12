@@ -121,12 +121,17 @@ const getJobs = async (req, res) => {
       maxSalary,
       experienceLevel,
       employmentType,
+      workplaceType,
       page = 1,
       limit = 10,
       sort = "newest"
     } = req.query;
 
-    const query = { isActive: true };  //only show jobs that are available and not expired
+    const query = { isActive: true };
+
+    if (workplaceType) {
+      query.workplaceType = workplaceType;
+    }
 
     // 🔍 Search by title (case-insensitive)
    if (search) {
@@ -160,6 +165,20 @@ const getJobs = async (req, res) => {
     // 💼 Employment type filter
     if (employmentType) {
       query.employmentType = employmentType;
+    }
+
+    // 📅 Date posted filter
+    if (req.query.datePosted) {
+      const now = new Date();
+      let dateLimit;
+      if (req.query.datePosted === "today") dateLimit = new Date(now.setDate(now.getDate() - 1));
+      else if (req.query.datePosted === "3days") dateLimit = new Date(now.setDate(now.getDate() - 3));
+      else if (req.query.datePosted === "week") dateLimit = new Date(now.setDate(now.getDate() - 7));
+      else if (req.query.datePosted === "month") dateLimit = new Date(now.setMonth(now.getMonth() - 1));
+
+      if (dateLimit) {
+        query.createdAt = { $gte: dateLimit };
+      }
     }
 
     // 📄 Pagination

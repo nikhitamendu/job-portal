@@ -54,8 +54,8 @@ const Notifications = () => {
   return (
     <div style={{ minHeight: "100vh", background: "#f3f2ef", padding: "32px 20px" }}>
       <style>{`
-        .notif-wrapper { max-width: 1128px; margin: 0 auto; display: grid; grid-template-columns: 225px 1fr 290px; gap: 24px; }
-        @media (max-width: 992px) { .notif-wrapper { grid-template-columns: 1fr; } .notif-left, .notif-right { display: none; } }
+        .notif-wrapper { max-width: 1128px; margin: 0 auto; display: grid; grid-template-columns: 225px 1fr; gap: 24px; }
+        @media (max-width: 992px) { .notif-wrapper { grid-template-columns: 1fr; } .notif-left { display: none; } }
         
         .side-card { background: white; border-radius: 10px; border: 1px solid #e0e0e0; overflow: hidden; }
         .feed-container { display: flex; flex-direction: column; gap: 8px; }
@@ -64,7 +64,7 @@ const Notifications = () => {
         .notif-card:hover { background: #f8f8f8; }
         .notif-card.unread { background: #eff6ff; border-left: 4px solid #0a66c2; }
         
-        .icon-box { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-center; font-size: 20px; flex-shrink: 0; background: #f3f2ef; }
+        .icon-box { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; background: #f3f2ef; }
         .notif-body { flex: 1; min-width: 0; }
         .notif-text { font-size: 14px; color: rgba(0,0,0,0.9); line-height: 1.4; margin: 0; }
         .notif-time { font-size: 12px; color: rgba(0,0,0,0.6); margin-top: 4px; }
@@ -146,35 +146,10 @@ const Notifications = () => {
             ))
           )}
         </main>
-
-        {/* RIGHT COLUMN: STATS */}
-        <aside className="notif-right">
-          <div className="side-card" style={{ padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Activity Insights</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <StatRow label="Applications" value={notifications.filter(n => n.type === 'application').length} />
-              <StatRow label="Outreach" value={notifications.filter(n => n.type === 'outreach').length} />
-              <StatRow label="Job Matches" value={notifications.filter(n => n.type === 'job_match' || n.type === 'new_job').length} />
-            </div>
-          </div>
-          
-          <div className="side-card" style={{ padding: 16, marginTop: 16, textAlign: "center" }}>
-            <p style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", margin: 0 }}>
-              HireHub Premium Insight © 2026
-            </p>
-          </div>
-        </aside>
       </div>
     </div>
   );
 };
-
-const StatRow = ({ label, value }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-    <span style={{ fontSize: 13, color: "rgba(0,0,0,0.7)" }}>{label}</span>
-    <span style={{ fontSize: 13, fontWeight: 700, color: "#0a66c2" }}>{value}</span>
-  </div>
-);
 
 function getIcon(type) {
   switch (type) {

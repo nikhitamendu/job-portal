@@ -11,6 +11,9 @@ app.use(express.json());  //converts frontend json req in js object
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
   // "https://job-portal-frontend-latest.onrender.com"
 ];
 app.use(cors({
@@ -24,7 +27,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/jobs", require("./routes/jobRoutes"));
 app.use("/api/applications", require("./routes/applicationRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/interviews", require("./routes/interviewRoutes"));
 app.use("/api/recruiter", require("./routes/recruiterRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGO_URI)

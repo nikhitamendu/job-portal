@@ -3,26 +3,33 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
+import InterviewScheduler from "../components/InterviewScheduler";
 
 /* ── Status config ── */
 const STATUS = {
-  Applied:     { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",    dot: "bg-blue-500",    hex: "#3b82f6" },
-  Reviewed:    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-800",   dot: "bg-amber-400",   hex: "#f59e0b" },
-  Shortlisted: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-800", dot: "bg-emerald-500", hex: "#10b981" },
-  Rejected:    { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-800",     dot: "bg-red-500",     hex: "#ef4444" },
+  Applied:     { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",      dot: "bg-blue-500",      hex: "#3b82f6" },
+  Reviewed:    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-700",     dot: "bg-amber-400",    hex: "#f59e0b" },
+  Shortlisted: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700",   dot: "bg-emerald-500",  hex: "#10b981" },
+  Interview:   { bg: "bg-purple-50",  border: "border-purple-200",  text: "text-purple-700",    dot: "bg-purple-500",   hex: "#a855f7" },
+  Offer:       { bg: "bg-green-50",   border: "border-green-200",   text: "text-green-700",     dot: "bg-green-500",    hex: "#22c55e" },
+  Rejected:    { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-700",       dot: "bg-red-500",      hex: "#ef4444" },
 };
 
 const WORKFLOW = {
   Applied:     ["Reviewed", "Rejected"],
   Reviewed:    ["Shortlisted", "Rejected"],
-  Shortlisted: [],
+  Shortlisted: ["Interview", "Rejected"],
+  Interview:   ["Offer", "Rejected"],
+  Offer:       [],
   Rejected:    [],
 };
 
 const BTN_NEXT = {
   Reviewed:    "text-amber-800   bg-amber-50   border-amber-200   hover:bg-amber-100",
   Shortlisted: "text-emerald-800 bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-  Rejected:    "text-red-800     bg-red-50     border-red-200     hover:bg-red-100",
+  Interview:   "text-purple-800   bg-purple-50   border-purple-200   hover:bg-purple-100",
+  Offer:       "text-green-800    bg-green-50    border-green-200    hover:bg-green-100",
+  Rejected:    "text-red-800      bg-red-50      border-red-200      hover:bg-red-100",
 };
 
 /* ════════════════════════════════════════════
@@ -45,6 +52,7 @@ const JobApplicants = () => {
   const [contactModal, setContactModal] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: "", message: "" });
   const [sending, setSending] = useState(false);
+  const [schedulingApp, setSchedulingApp] = useState(null);
 
   /* ── Fetch ── */
   const fetchApplicants = async () => {
@@ -102,7 +110,7 @@ const JobApplicants = () => {
 
   /* ── Derived ── */
   const counts = useMemo(() => {
-    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Rejected: 0 };
+    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Interview: 0, Offer: 0, Rejected: 0 };
     applications.forEach(a => { if (c[a.status] !== undefined) c[a.status]++; });
     return c;
   }, [applications]);
@@ -169,9 +177,9 @@ const JobApplicants = () => {
             <div className="flex gap-2.5 flex-wrap">
               {[
                 { label: "Total",       count: counts.All,         color: "text-blue-300"    },
-                { label: "Applied",     count: counts.Applied,     color: "text-blue-300"    },
-                { label: "Reviewed",    count: counts.Reviewed,    color: "text-yellow-300"  },
                 { label: "Shortlisted", count: counts.Shortlisted, color: "text-emerald-300" },
+                { label: "Interview",   count: counts.Interview,   color: "text-purple-300"  },
+                { label: "Offer",       count: counts.Offer,       color: "text-green-400"   },
                 { label: "Rejected",    count: counts.Rejected,    color: "text-red-300"     },
               ].map(({ label, count, color }) => (
                 <div key={label} className="rounded-xl px-4 py-2.5 text-center min-w-14 border"
@@ -185,8 +193,8 @@ const JobApplicants = () => {
 
           {/* Pipeline progress bars */}
           {applications.length > 0 && (
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {["Applied", "Reviewed", "Shortlisted", "Rejected"].map(s => {
+            <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              {["Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(s => {
                 const pct = Math.round((counts[s] / applications.length) * 100);
                 return (
                   <div key={s} className="rounded-xl px-3.5 py-2.5"
@@ -210,7 +218,7 @@ const JobApplicants = () => {
       {/* ══ TABS ══ */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-6 flex overflow-x-auto">
-          {["All", "Applied", "Reviewed", "Shortlisted", "Rejected"].map(tab => (
+          {["All", "Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -369,6 +377,14 @@ const JobApplicants = () => {
                             💬 Contact
                           </button>
                         </div>
+                        {(app.status === "Shortlisted" || app.status === "Interview") && (
+                          <button
+                            onClick={() => setSchedulingApp(app)}
+                            className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition"
+                          >
+                            📅 Schedule Interview
+                          </button>
+                        )}
                         {app.applicant?.resumeFileId ? (
                           <a
                             href={`${import.meta.env.VITE_API_URL}/users/file/${app.applicant.resumeFileId}`}
@@ -396,7 +412,7 @@ const JobApplicants = () => {
                           >
                             {isUpdating
                               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              : next === "Shortlisted" ? "✓" : next === "Rejected" ? "✕" : "👁"
+                              : next === "Shortlisted" ? "✓" : next === "Interview" ? "📅" : next === "Offer" ? "🏆" : next === "Rejected" ? "✕" : "👁"
                             }
                             {next}
                           </button>
@@ -408,9 +424,11 @@ const JobApplicants = () => {
                     {nextSteps.length === 0 && (
                       <div className="mt-4 pt-4 border-t border-slate-100">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.text}`}>
-                          {app.status === "Shortlisted"
-                            ? "✓ Candidate Shortlisted — No further action needed"
-                            : "✕ Candidate Rejected"}
+                          {app.status === "Offer"
+                            ? "🏆 Offer Extended — Awaiting candidate response"
+                            : app.status === "Rejected"
+                            ? "✕ Candidate Rejected"
+                            : "✓ Pipeline Stage Reached"}
                         </span>
                       </div>
                     )}
@@ -598,58 +616,13 @@ const JobApplicants = () => {
         </div>
       )}
 
-      {/* ── CONTACT MODAL ── */}
-      {contactModal && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={e => e.target === e.currentTarget && setContactModal(null)}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 bg-slate-50/50">
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">Message to Applicant</h3>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{contactModal.applicant?.name}</p>
-              </div>
-              <button onClick={() => setContactModal(null)} className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
-            </div>
-            
-            <form onSubmit={handleContact} className="p-7 space-y-5">
-              <div>
-                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Subject</label>
-                <input
-                  required
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-900 text-sm font-semibold focus:border-blue-500 focus:bg-white outline-none transition"
-                  placeholder="Subject of your message"
-                  value={emailForm.subject}
-                  onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Message Body</label>
-                <textarea
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-900 text-sm font-semibold focus:border-blue-500 focus:bg-white outline-none transition resize-none"
-                  placeholder="Type your message here..."
-                  value={emailForm.message}
-                  onChange={e => setEmailForm({ ...emailForm, message: e.target.value })}
-                />
-              </div>
-              
-              <button
-                type="submit"
-                disabled={sending}
-                className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {sending ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>📧 Send Secure Email</>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
+      {/* ── INTERVIEW SCHEDULER MODAL ── */}
+      {schedulingApp && (
+        <InterviewScheduler 
+          application={schedulingApp} 
+          onClose={() => setSchedulingApp(null)} 
+          onScheduled={fetchApplicants}
+        />
       )}
     </div>
   );

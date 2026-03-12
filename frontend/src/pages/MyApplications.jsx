@@ -456,15 +456,18 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const STATUS = {
-  Applied:     { bg:"bg-blue-50",    border:"border-blue-200",    text:"text-blue-700",    dot:"bg-blue-500",    label:"Applied"     },
-  Reviewed:    { bg:"bg-amber-50",   border:"border-amber-200",   text:"text-amber-800",   dot:"bg-amber-400",   label:"Reviewed"    },
-  Shortlisted: { bg:"bg-emerald-50", border:"border-emerald-200", text:"text-emerald-800", dot:"bg-emerald-500", label:"Shortlisted" },
-  Rejected:    { bg:"bg-red-50",     border:"border-red-200",     text:"text-red-800",     dot:"bg-red-500",     label:"Rejected"    },
+  Applied:     { bg:"bg-blue-50",    border:"border-blue-200",    text:"text-blue-700",      dot:"bg-blue-500",      label:"Applied"     },
+  Reviewed:    { bg:"bg-amber-50",   border:"border-amber-200",   text:"text-amber-700",     dot:"bg-amber-400",    label:"Reviewed"    },
+  Shortlisted: { bg:"bg-emerald-50", border:"border-emerald-200", text:"text-emerald-700",   dot:"bg-emerald-500",  label:"Shortlisted" },
+  Interview:   { bg:"bg-purple-50",  border:"border-purple-200",  text:"text-purple-700",    dot:"bg-purple-500",   label:"Interview"   },
+  Offer:       { bg:"bg-green-50",   border:"border-green-200",   text:"text-green-700",     dot:"bg-green-500",    label:"Offer 🏆"   },
+  Rejected:    { bg:"bg-red-50",     border:"border-red-200",     text:"text-red-700",       dot:"bg-red-500",      label:"Rejected"    },
 };
 
-const STEPS = ["Applied", "Reviewed", "Shortlisted"];
+const STEPS = ["Applied", "Reviewed", "Shortlisted", "Interview", "Offer"];
 
 const stepIndex = (status) => {
   if (status === "Rejected") return -1;
@@ -475,11 +478,15 @@ const STEP_ACTIVE_CLASS = {
   Applied:     "bg-blue-500 border-blue-500 text-white",
   Reviewed:    "bg-amber-400 border-amber-400 text-white",
   Shortlisted: "bg-emerald-500 border-emerald-500 text-white",
+  Interview:   "bg-purple-500 border-purple-500 text-white",
+  Offer:       "bg-green-500 border-green-500 text-white",
 };
 const STEP_LINE_ACTIVE = {
-  Applied:     "bg-blue-500",
+  Applied:     "bg-blue-400",
   Reviewed:    "bg-amber-400",
-  Shortlisted: "bg-emerald-500",
+  Shortlisted: "bg-emerald-400",
+  Interview:   "bg-purple-400",
+  Offer:       "bg-green-400",
 };
 
 /* ════════════════════════════════════════════
@@ -491,16 +498,32 @@ const MyApplications = () => {
   const [activeTab, setActiveTab]       = useState("All");
   const [search, setSearch]             = useState("");
   const [expandedId, setExpandedId]     = useState(null);
+  const [withdrawing, setWithdrawing]   = useState(null);
 
-  useEffect(() => {
+  const fetchApplications = () => {
     api.get("/applications/my-applications")
       .then(({ data }) => setApplications(data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchApplications(); }, []);
+
+  const handleWithdraw = async (jobId) => {
+    if (!window.confirm("Withdraw this application? This cannot be undone.")) return;
+    setWithdrawing(jobId);
+    try {
+      await api.delete(`/applications/withdraw/${jobId}`);
+      toast.success("Application withdrawn");
+      fetchApplications();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to withdraw");
+    }
+    setWithdrawing(null);
+  };
 
   const counts = useMemo(() => {
-    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Rejected: 0 };
+    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Interview: 0, Offer: 0, Rejected: 0 };
     applications.forEach(a => { if (c[a.status] !== undefined) c[a.status]++; });
     return c;
   }, [applications]);
@@ -573,10 +596,10 @@ const MyApplications = () => {
             {/* Stat boxes */}
             <div className="flex gap-2.5 flex-wrap">
               {[
-                { label: "Total",       count: counts.All,          color: "text-blue-300"    },
-                { label: "Reviewed",    count: counts.Reviewed,     color: "text-yellow-300"  },
-                { label: "Shortlisted", count: counts.Shortlisted,  color: "text-emerald-300" },
-                { label: "Rejected",    count: counts.Rejected,     color: "text-red-300"     },
+                { label: "Total",       count: counts.All,         color: "text-blue-300"    },
+                { label: "Interview",   count: counts.Interview,   color: "text-purple-300"  },
+                { label: "Offer",       count: counts.Offer,       color: "text-green-300"   },
+                { label: "Rejected",    count: counts.Rejected,    color: "text-red-300"     },
               ].map(({ label, count, color }) => (
                 <div
                   key={label}
@@ -614,7 +637,7 @@ const MyApplications = () => {
       {/* ══ TABS ══ */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6 flex overflow-x-auto">
-          {["All", "Applied", "Reviewed", "Shortlisted", "Rejected"].map(tab => (
+          {["All", "Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -630,7 +653,7 @@ const MyApplications = () => {
                   ? "bg-blue-50 text-blue-600 border-blue-200"
                   : "bg-slate-100 text-slate-400 border-slate-200"
               }`}>
-                {counts[tab]}
+                {counts[tab] ?? 0}
               </span>
             </button>
           ))}
@@ -794,6 +817,17 @@ const MyApplications = () => {
                       >
                         {isOpen ? "▲ Less" : "▼ Details"}
                       </button>
+
+                      {/* Withdraw — only when still Applied */}
+                      {app.status === "Applied" && (
+                        <button
+                          disabled={withdrawing === app.job?._id}
+                          onClick={() => handleWithdraw(app.job?._id)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                        >
+                          {withdrawing === app.job?._id ? "…" : "✕ Withdraw"}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -830,6 +864,8 @@ const MyApplications = () => {
                           {app.status === "Applied"     && "⏳ Your application is under review. Hang tight!"}
                           {app.status === "Reviewed"    && "👁 A recruiter has reviewed your profile. You may hear back soon."}
                           {app.status === "Shortlisted" && "🎉 Congratulations! You've been shortlisted. Expect to be contacted."}
+                          {app.status === "Interview"   && "📅 You've been invited to an interview! Check your notifications for details."}
+                          {app.status === "Offer"       && "🏆 You've received a job offer! Congratulations — this is a big moment!"}
                           {app.status === "Rejected"    && "Unfortunately, your application was not selected this time. Keep applying!"}
                         </p>
                       </div>

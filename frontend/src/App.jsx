@@ -290,7 +290,9 @@ import Profile from "./pages/Profile";
 import VerifySuccess from "./pages/VerifySuccess";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminRoute from "./routes/AdminRoute";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import CreateJob from "./pages/CreateJob";
 import EditJob from "./pages/EditJob";
 import Jobs from "./pages/Jobs";
@@ -298,6 +300,7 @@ import JobDetails from "./pages/JobDetails";
 import MyApplications from "./pages/MyApplications";
 import JobApplicants from "./pages/JobApplicants";
 import RecruiterApplicants from "./pages/RecruiterApplicants";
+import MyInterviews from "./pages/MyInterviews";
 import Notifications from "./pages/Notifications";
 import CandidateSearch from "./pages/CandidateSearch";
 
@@ -367,7 +370,9 @@ export default function App() {
               path="/login"
               element={
                 isAuthenticated ? (
-                  user?.role === "recruiter" ? (
+                  user?.role === "admin" ? (
+                    <Navigate to="/admin" />
+                  ) : user?.role === "recruiter" ? (
                     <Navigate to="/recruiter/dashboard" />
                   ) : (
                     <Navigate to="/profile" />
@@ -382,7 +387,9 @@ export default function App() {
               path="/register"
               element={
                 isAuthenticated ? (
-                  user?.role === "recruiter" ? (
+                  user?.role === "admin" ? (
+                    <Navigate to="/admin" />
+                  ) : user?.role === "recruiter" ? (
                     <Navigate to="/recruiter/dashboard" />
                   ) : (
                     <Navigate to="/profile" />
@@ -398,10 +405,10 @@ export default function App() {
             <Route path="/reset-password"  element={<ResetPassword />}  />
             <Route path="/verify-success"  element={<VerifySuccess />}  />
 
-            {/* PUBLIC JOBS */}
             <Route path="/jobs"     element={<Jobs />}       />
             <Route path="/jobs/:id" element={<JobDetails />} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/interviews" element={<ProtectedRoute><MyInterviews /></ProtectedRoute>} />
 
             {/* JOB SEEKER */}
             <Route
@@ -483,6 +490,16 @@ export default function App() {
                 <ProtectedRoute>
                   <CandidateSearch />
                 </ProtectedRoute>
+              }
+            />
+
+            {/* ADMIN */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               }
             />
 

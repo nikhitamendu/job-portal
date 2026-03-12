@@ -698,31 +698,38 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
 import { toast } from "react-toastify";
+import InterviewScheduler from "../components/InterviewScheduler";
 
 /* ── Status config ── */
 const STATUS = {
-  Applied:     { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",    dot: "bg-blue-500",    label: "Applied"     },
-  Reviewed:    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-800",   dot: "bg-amber-400",   label: "Reviewed"    },
-  Shortlisted: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-800", dot: "bg-emerald-500", label: "Shortlisted" },
-  Rejected:    { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-800",     dot: "bg-red-500",     label: "Rejected"    },
+  Applied:     { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",      dot: "bg-blue-500",      label: "Applied"     },
+  Reviewed:    { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-700",     dot: "bg-amber-400",    label: "Reviewed"    },
+  Shortlisted: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700",   dot: "bg-emerald-500",  label: "Shortlisted" },
+  Interview:   { bg: "bg-purple-50",  border: "border-purple-200",  text: "text-purple-700",    dot: "bg-purple-500",   label: "Interview"   },
+  Offer:       { bg: "bg-green-50",   border: "border-green-200",   text: "text-green-700",     dot: "bg-green-500",    label: "Offer🏆"     },
+  Rejected:    { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-700",       dot: "bg-red-500",      label: "Rejected"    },
 };
 
 /* Hex colors for progress bars (dynamic widths need inline style) */
 const STATUS_HEX = {
-  Applied: "#3b82f6", Reviewed: "#f59e0b", Shortlisted: "#10b981", Rejected: "#ef4444",
+  Applied: "#3b82f6", Reviewed: "#f59e0b", Shortlisted: "#10b981", Interview: "#a855f7", Offer: "#22c55e", Rejected: "#ef4444",
 };
 
 const WORKFLOW = {
   Applied:     ["Reviewed", "Rejected"],
   Reviewed:    ["Shortlisted", "Rejected"],
-  Shortlisted: [],
+  Shortlisted: ["Interview", "Rejected"],
+  Interview:   ["Offer", "Rejected"],
+  Offer:       [],
   Rejected:    [],
 };
 
 const BTN_NEXT = {
   Reviewed:    "text-amber-800   bg-amber-50   border-amber-200   hover:bg-amber-100",
   Shortlisted: "text-emerald-800 bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-  Rejected:    "text-red-800     bg-red-50     border-red-200     hover:bg-red-100",
+  Interview:   "text-purple-800   bg-purple-50   border-purple-200   hover:bg-purple-100",
+  Offer:       "text-green-800    bg-green-50    border-green-200    hover:bg-green-100",
+  Rejected:    "text-red-800      bg-red-50      border-red-200      hover:bg-red-100",
 };
 
 /* ════════════════════════════════════════════
@@ -742,6 +749,7 @@ export default function RecruiterApplicants() {
   const [contactModal, setContactModal] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: "", message: "" });
   const [sending, setSending] = useState(false);
+  const [schedulingApp, setSchedulingApp] = useState(null);
 
   /* ── Fetch ── */
   const fetchApplicants = async () => {
@@ -804,7 +812,7 @@ export default function RecruiterApplicants() {
   }, [applications]);
 
   const counts = useMemo(() => {
-    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Rejected: 0 };
+    const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Interview: 0, Offer: 0, Rejected: 0 };
     applications.forEach(a => { if (c[a.status] !== undefined) c[a.status]++; });
     return c;
   }, [applications]);
@@ -864,8 +872,9 @@ export default function RecruiterApplicants() {
             <div className="flex gap-3 flex-wrap">
               {[
                 { label: "Total",       count: counts.All,         color: "text-blue-300"    },
-                { label: "Applied",     count: counts.Applied,     color: "text-blue-300"    },
                 { label: "Shortlisted", count: counts.Shortlisted, color: "text-emerald-300" },
+                { label: "Interview",   count: counts.Interview,   color: "text-purple-300"  },
+                { label: "Offer",       count: counts.Offer,       color: "text-green-400"   },
                 { label: "Rejected",    count: counts.Rejected,    color: "text-red-300"     },
               ].map(({ label, count, color }) => (
                 <div key={label} className="rounded-xl px-4 py-3 text-center min-w-16 border"
@@ -879,8 +888,8 @@ export default function RecruiterApplicants() {
 
           {/* Pipeline progress bars */}
           {applications.length > 0 && (
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {["Applied", "Reviewed", "Shortlisted", "Rejected"].map(s => {
+            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {["Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(s => {
                 const pct = Math.round((counts[s] / applications.length) * 100);
                 return (
                   <div key={s} className="rounded-xl px-3.5 py-2.5"
@@ -904,7 +913,7 @@ export default function RecruiterApplicants() {
       {/* ══ TABS ══ */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-6 flex overflow-x-auto">
-          {["All", "Applied", "Reviewed", "Shortlisted", "Rejected"].map(tab => (
+          {["All", "Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1087,6 +1096,14 @@ export default function RecruiterApplicants() {
                         >
                           💬 Contact
                         </button>
+                        {(app.status === "Shortlisted" || app.status === "Interview") && (
+                          <button
+                            onClick={() => setSchedulingApp(app)}
+                            className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition"
+                          >
+                            📅 Schedule Interview
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1103,7 +1120,7 @@ export default function RecruiterApplicants() {
                           >
                             {isUpdating
                               ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              : next === "Shortlisted" ? "✓" : next === "Rejected" ? "✕" : "👁"
+                              : next === "Shortlisted" ? "✓" : next === "Interview" ? "📅" : next === "Offer" ? "🏆" : next === "Rejected" ? "✕" : "👁"
                             }
                             {next}
                           </button>
@@ -1115,9 +1132,11 @@ export default function RecruiterApplicants() {
                     {nextSteps.length === 0 && (
                       <div className="mt-4 pt-4 border-t border-slate-100">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.text}`}>
-                          {app.status === "Shortlisted"
-                            ? "✓ Candidate Shortlisted — No further action needed"
-                            : "✕ Candidate Rejected"}
+                          {app.status === "Offer"
+                            ? "🏆 Offer Extended — Awaiting response"
+                            : app.status === "Rejected"
+                            ? "✕ Candidate Rejected"
+                            : "✓ Pipeline Stage Reached"}
                         </span>
                       </div>
                     )}
@@ -1356,6 +1375,15 @@ export default function RecruiterApplicants() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── INTERVIEW SCHEDULER MODAL ── */}
+      {schedulingApp && (
+        <InterviewScheduler 
+          application={schedulingApp} 
+          onClose={() => setSchedulingApp(null)} 
+          onScheduled={fetchApplicants}
+        />
       )}
     </div>
   );

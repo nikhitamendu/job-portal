@@ -17,9 +17,16 @@ const Jobs = () => {
     search: "",
     city: "",
     employmentType: "",
+    workplaceType: "",
+    experienceLevel: "",
+    minSalary: "",
+    maxSalary: "",
+    datePosted: "",
     sort: "newest",
     page: 1,
   });
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   /* ── Fetch all jobs (public, no auth needed) ── */
   const fetchJobs = async () => {
@@ -113,97 +120,177 @@ const Jobs = () => {
             </select>
           </div>
 
-          {/* Filter pills */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <button
-              onClick={() => setFilters({ ...filters, employmentType: "", page: 1 })}
-              className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition cursor-pointer
-                ${filters.employmentType === ""
-                  ? "bg-blue-600 border-blue-500 text-white"
-                  : "bg-white/8 border-white/12 text-white/55 hover:bg-white/12"
-                }`}
-            >
-              All Types
-            </button>
-            {employmentTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilters({ ...filters, employmentType: type, page: 1 })}
-                className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition cursor-pointer
-                  ${filters.employmentType === type
-                    ? "bg-blue-600 border-blue-500 text-white"
-                    : "bg-white/8 border-white/12 text-white/55 hover:bg-white/12"
-                  }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-
         </div>
       </div>
 
       {/* ── Body ── */}
       <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Mobile filter toggle */}
+          <button 
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="lg:hidden w-full mb-4 py-3 px-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between text-slate-700 font-bold"
+          >
+            <span className="flex items-center gap-2">📂 Filters</span>
+            <span>{isFilterOpen ? "▲" : "▼"}</span>
+          </button>
 
-        {/* Results header */}
-        {!loading && jobs.length > 0 && (
-          <p className="text-sm text-slate-400 font-medium mb-5">
-            Showing <span className="text-slate-700 font-bold">{jobs.length}</span> results
-            {filters.search && (
-              <> for <span className="text-blue-700 font-bold">"{filters.search}"</span></>
-            )}
-            {appliedJobIds.size > 0 && user?.role !== "recruiter" && (
-              <span className="ml-3 text-emerald-600 font-semibold">
-                · {appliedJobIds.size} applied
-              </span>
-            )}
-          </p>
-        )}
+          {/* ── Left: Sidebar Filters ── */}
+          <div className={`${isFilterOpen ? "block" : "hidden"} lg:block w-full lg:w-64 flex-shrink-0 space-y-6`}>
+            
+            <FilterSection title="Workplace Type">
+              {["Remote", "On-site", "Hybrid"].map(type => (
+                <FilterPill 
+                  key={type} 
+                  label={type} 
+                  active={filters.workplaceType === type}
+                  onClick={() => setFilters({ ...filters, workplaceType: filters.workplaceType === type ? "" : type, page: 1 })}
+                />
+              ))}
+            </FilterSection>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex items-center gap-3 text-slate-400">
-              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm font-medium">Finding jobs…</span>
-            </div>
-          </div>
-        )}
+            <FilterSection title="Experience Level">
+              {["Entry-level", "Mid-level", "Senior-level", "Executive"].map(lvl => (
+                <FilterPill 
+                  key={lvl} 
+                  label={lvl} 
+                  active={filters.experienceLevel === lvl}
+                  onClick={() => setFilters({ ...filters, experienceLevel: filters.experienceLevel === lvl ? "" : lvl, page: 1 })}
+                />
+              ))}
+            </FilterSection>
 
-        {/* Empty */}
-        {!loading && jobs.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
-            <div className="text-5xl mb-4">🔍</div>
-            <h3 className="text-base font-bold text-slate-800 mb-1">No jobs found</h3>
-            <p className="text-sm text-slate-400 mb-5">
-              Try adjusting your search or filters to find more results.
-            </p>
-            <button
-              onClick={() => setFilters({ search: "", city: "", employmentType: "", sort: "newest", page: 1 })}
-              className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm shadow-blue-200 cursor-pointer"
+            <FilterSection title="Salary Range">
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <input 
+                  type="number" 
+                  placeholder="Min" 
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:border-blue-500"
+                  value={filters.minSalary}
+                  onChange={e => setFilters({ ...filters, minSalary: e.target.value, page: 1 })}
+                />
+                <input 
+                  type="number" 
+                  placeholder="Max" 
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:border-blue-500"
+                  value={filters.maxSalary}
+                  onChange={e => setFilters({ ...filters, maxSalary: e.target.value, page: 1 })}
+                />
+              </div>
+            </FilterSection>
+
+            <FilterSection title="Date Posted">
+              {[
+                { label: "Today", value: "today" },
+                { label: "Last 3 days", value: "3days" },
+                { label: "Last week", value: "week" },
+                { label: "Last month", value: "month" },
+              ].map(d => (
+                <FilterPill 
+                  key={d.value} 
+                  label={d.label} 
+                  active={filters.datePosted === d.value}
+                  onClick={() => setFilters({ ...filters, datePosted: filters.datePosted === d.value ? "" : d.value, page: 1 })}
+                />
+              ))}
+            </FilterSection>
+
+            <button 
+              onClick={() => setFilters({ search: "", city: "", employmentType: "", workplaceType: "", experienceLevel: "", minSalary: "", maxSalary: "", datePosted: "", sort: "newest", page: 1 })}
+              className="w-full py-2.5 text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 rounded-xl hover:bg-slate-200 transition"
             >
-              Clear Filters
+              Reset All Filters
             </button>
           </div>
-        )}
 
-        {/* Grid */}
-        {!loading && jobs.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {jobs.map((job) => (
-              <JobCard
-                key={job._id}
-                job={job}
-                isApplied={appliedJobIds.has(job._id?.toString())}
-              />
-            ))}
+          {/* ── Right: Job Cards ── */}
+          <div className="flex-1 min-w-0">
+            {/* Results header */}
+            {!loading && jobs.length > 0 && (
+              <p className="text-sm text-slate-400 font-medium mb-5">
+                Showing <span className="text-slate-700 font-bold">{jobs.length}</span> results
+                {filters.search && (
+                  <> for <span className="text-blue-700 font-bold"> "{filters.search}"</span></>
+                )}
+                {appliedJobIds.size > 0 && user?.role !== "recruiter" && (
+                  <span className="ml-3 text-emerald-600 font-semibold">
+                    · {appliedJobIds.size} applied
+                  </span>
+                )}
+              </p>
+            )}
+
+            {/* Loading */}
+            {loading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="flex items-center gap-3 text-slate-400">
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Finding jobs…</span>
+                </div>
+              </div>
+            )}
+
+            {/* Empty */}
+            {!loading && jobs.length === 0 && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
+                <div className="text-5xl mb-4">🔍</div>
+                <h3 className="text-base font-bold text-slate-800 mb-1">No jobs found</h3>
+                <p className="text-sm text-slate-400 mb-5">
+                  Try adjusting your search or filters to find more results.
+                </p>
+                <button
+                  onClick={() => setFilters({ search: "", city: "", employmentType: "", workplaceType: "", experienceLevel: "", minSalary: "", maxSalary: "", datePosted: "", sort: "newest", page: 1 })}
+                  className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm shadow-blue-200 cursor-pointer"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
+            {/* Grid */}
+            {!loading && jobs.length > 0 && (
+              <div className="grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                {jobs.map((job) => (
+                  <JobCard
+                    key={job._id}
+                    job={job}
+                    isApplied={appliedJobIds.has(job._id?.toString())}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
-
+        </div>
       </div>
     </div>
   );
 };
+
+function FilterSection({ title, children }) {
+  return (
+    <div className="border-b border-slate-200 pb-5">
+      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{title}</h3>
+      <div className="flex flex-wrap gap-2">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FilterPill({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition cursor-pointer
+        ${active
+          ? "bg-blue-600 border-blue-500 text-white"
+          : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+        }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 export default Jobs;

@@ -126,27 +126,37 @@ const updateApplicationStatus = async (req, res) => {
     const allowedTransitions = {
       Applied:     ["Reviewed", "Rejected"],
       Reviewed:    ["Shortlisted", "Rejected"],
-      Shortlisted: [],
+      Shortlisted: ["Interview", "Rejected"],
+      Interview:   ["Offer", "Rejected"],
+      Offer:       [],
       Rejected:    [],
     };
 
-    if (!allowedTransitions[application.status].includes(status)) {
+    if (!allowedTransitions[application.status]?.includes(status)) {
       return res.status(400).json({
         message: `Cannot change status from ${application.status} to ${status}`,
       });
     }
 
+    application.statusHistory.push({ status, changedAt: new Date() });
     application.status = status;
     await application.save();
 
     res.json({ message: "Status updated successfully", application });
 
     // Notify applicant
+    const statusMessages = {
+      Reviewed:    "👁 A recruiter has reviewed your application!",
+      Shortlisted: "🎉 Great news! You've been shortlisted!",
+      Interview:   "📅 You've been invited to an interview!",
+      Offer:       "🏆 Congratulations! You've received a job offer!",
+      Rejected:    "Your application was not selected this time.",
+    };
     await createNotification({
       recipient: application.applicant,
       sender: req.user._id,
       type: "status_update",
-      message: `Your application for "${application.job.title}" has been updated to: ${status}`,
+      message: `${statusMessages[status] || `Status updated to ${status}`} — ${application.job.title}`,
       link: "/my-applications",
     });
 
@@ -181,11 +191,36 @@ const getAllApplicantsForRecruiter = async (req, res) => {
   }
 };
 
+/* ================= WITHDRAW APPLICATION ================= */
+const withdrawApplication = async (req, res) => {
+  try {
+    const application = await Application.findOne({
+      job: req.params.jobId,
+      applicant: req.user._id,
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.status !== "Applied") {
+      return res.status(400).json({ message: "You can only withdraw applications that are still in Applied status" });
+    }
+
+    await application.deleteOne();
+    res.json({ message: "Application withdrawn successfully" });
+  } catch (error) {
+    console.error("WITHDRAW ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   applyToJob,
-  checkIfApplied,               // ← NEW
+  checkIfApplied,
   getMyApplications,
   getApplicantsForJob,
   updateApplicationStatus,
   getAllApplicantsForRecruiter,
+  withdrawApplication,
 };
