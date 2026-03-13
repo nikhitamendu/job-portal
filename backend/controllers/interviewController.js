@@ -146,6 +146,14 @@ const scheduleInterview = async (req, res) => {
       notes
     });
 
+    // Sync Application status to "Interview"
+    const updatedApp = await Application.findByIdAndUpdate(
+      applicationId,
+      { status: "Interview" },
+      { new: true }
+    );
+    console.log("Updated Application status to Interview:", updatedApp?.status);
+
     res.status(201).json({
       message: "Interview scheduled successfully",
       interview
@@ -154,6 +162,8 @@ const scheduleInterview = async (req, res) => {
     // Notify Candidate + send email AFTER sending response (non-blocking)
     try {
         const recruiter = await User.findById(req.user._id);
+        const absoluteLocation = location?.startsWith("http") ? location : `https://${location}`;
+        
         await createNotification({
           recipient: application.applicant._id,
           sender: req.user._id,
@@ -172,7 +182,7 @@ const scheduleInterview = async (req, res) => {
             date,
             duration: duration || 45,
             type: type || "Online",
-            location,
+            location: absoluteLocation,
             notes,
           })
         );

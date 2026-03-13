@@ -13,11 +13,11 @@ const JOBSEEKER_LINKS = [
 ];
 
 const RECRUITER_LINKS = [
-  { to: "/recruiter/dashboard",   label: "Dashboard",      icon: "📊" },
-  { to: "/recruiter/applicants",  label: "All Applicants", icon: "👥" },
-  { to: "/recruiter/interviews",  label: "Interviews",     icon: "📅" },
-  { to: "/recruiter/search",      label: "Find Talent",    icon: "🔍" },
-  { to: "/profile",               label: "Profile",        icon: "👤" },
+  { to: "/recruiter/dashboard",  label: "Dashboard",      icon: "📊" },
+  { to: "/recruiter/applicants", label: "All Applicants", icon: "👥" },
+  { to: "/recruiter/interviews", label: "Interviews",     icon: "📅" },
+  { to: "/recruiter/search",     label: "Find Talent",    icon: "🔍" },
+  { to: "/profile",              label: "Profile",        icon: "👤" },
 ];
 
 export default function Navbar() {
@@ -59,22 +59,22 @@ export default function Navbar() {
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setUserDropdown(false);
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+      if (notifRef.current   && !notifRef.current.contains(e.target))    setNotifOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* Application count badge (job seeker) */
+  /* Application count badge (job seeker only) */
   useEffect(() => {
-    if (!isAuthenticated || isRecruiter) return;
+    if (!isAuthenticated || isRecruiter || isAdmin) return;
     api.get("/applications/my-applications")
       .then(({ data }) => {
         const pending = data.filter(a => a.status === "Applied" || a.status === "Reviewed").length;
         setAppCount(pending);
       })
       .catch(() => {});
-  }, [isAuthenticated, isRecruiter]);
+  }, [isAuthenticated, isRecruiter, isAdmin]);
 
   const fetchNotifications = async () => {
     if (!isAuthenticated) return;
@@ -97,20 +97,31 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const NavLinkItem = ({ link }) => (
+  /* Role pill styling */
+  const rolePill = isAdmin
+    ? "bg-purple-500/20 border-purple-500/30 text-purple-300"
+    : isRecruiter
+    ? "bg-amber-500/20 border-amber-500/30 text-amber-300"
+    : "bg-blue-500/20 border-blue-500/30 text-blue-300";
+
+  const roleLabel = isAdmin ? "⚡ Admin" : isRecruiter ? "🏢 Recruiter" : "👤 Job Seeker";
+
+  /* Nav link component */
+  const NavItem = ({ link }) => (
     <NavLink
       to={link.to}
       className={({ isActive }) =>
-        `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+        `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap ${
           isActive
             ? "text-blue-300 bg-blue-500/20"
-            : "text-white/70 hover:text-white hover:bg-white/10"
+            : "text-white/65 hover:text-white hover:bg-white/10"
         }`
       }
     >
-      {link.icon} {link.label}
+      <span>{link.icon}</span>
+      {link.label}
       {link.to === "/my-applications" && appCount > 0 && (
-        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">
+        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5 leading-none">
           {appCount}
         </span>
       )}
@@ -118,16 +129,12 @@ export default function Navbar() {
   );
 
   return (
-    <nav
-      className={`sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-[#0c1a2e] via-[#0f2d52] to-[#1a3a6e] transition-shadow ${
-        scrolled ? "shadow-lg shadow-black/40" : ""
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-6">
+    <nav className={`sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-[#0c1a2e] via-[#0f2d52] to-[#1a3a6e] transition-shadow ${scrolled ? "shadow-lg shadow-black/40" : ""}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
 
         {/* ── LOGO ── */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-blue-900/40">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-blue-900/40">
             H
           </div>
           <span className="text-white font-extrabold text-lg tracking-tight">
@@ -136,24 +143,28 @@ export default function Navbar() {
         </Link>
 
         {/* ── DESKTOP LINKS ── */}
-        <div className="hidden md:flex items-center gap-1 flex-1">
+        <div className="hidden md:flex items-center gap-0.5 flex-1 overflow-hidden">
           {isAuthenticated ? (
             isAdmin ? (
               <NavLink
                 to="/admin"
-                className="px-3 py-1.5 rounded-lg text-blue-300 bg-blue-500/20 text-sm font-semibold"
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors ${
+                    isActive ? "text-purple-300 bg-purple-500/20" : "text-purple-300/70 hover:text-purple-300 hover:bg-purple-500/15"
+                  }`
+                }
               >
                 ⚡ Admin Panel
               </NavLink>
             ) : (
-              navLinks.map(link => <NavLinkItem key={link.to} link={link} />)
+              navLinks.map(link => <NavItem key={link.to} link={link} />)
             )
           ) : (
             <NavLink
               to="/jobs"
               className={({ isActive }) =>
-                `px-3 py-1.5 text-sm font-semibold rounded-lg transition ${
-                  isActive ? "text-blue-300 bg-blue-500/20" : "text-white/70 hover:text-white hover:bg-white/10"
+                `px-3 py-1.5 text-sm font-semibold rounded-xl transition-colors ${
+                  isActive ? "text-blue-300 bg-blue-500/20" : "text-white/65 hover:text-white hover:bg-white/10"
                 }`
               }
             >
@@ -170,7 +181,7 @@ export default function Navbar() {
             <div ref={notifRef} className="relative">
               <button
                 onClick={() => setNotifOpen(o => !o)}
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-base transition relative"
+                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-base transition-colors relative"
                 title="Notifications"
               >
                 🔔
@@ -195,13 +206,13 @@ export default function Navbar() {
             <>
               <NavLink
                 to="/login"
-                className="hidden md:block text-white/70 hover:text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-white/10 transition"
+                className="hidden md:block text-white/65 hover:text-white text-sm font-semibold px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors"
               >
                 Login
               </NavLink>
               <Link
                 to="/register"
-                className="hidden md:block bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-1.5 rounded-lg transition shadow-md shadow-blue-900/40"
+                className="hidden md:block bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-1.5 rounded-xl transition-colors shadow-md shadow-blue-900/40"
               >
                 Sign Up →
               </Link>
@@ -211,38 +222,31 @@ export default function Navbar() {
             <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setUserDropdown(o => !o)}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 px-2 py-1 rounded-lg transition"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 px-2 py-1.5 rounded-xl transition-colors"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-7 h-7 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   {user?.name?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-white text-xs font-bold truncate max-w-[100px]">{user?.name}</p>
-                  <p className="text-[10px] text-white/50">
-                    {isAdmin ? "Admin" : isRecruiter ? "Recruiter" : "Job Seeker"}
-                  </p>
+                  <p className="text-white text-xs font-bold truncate max-w-[90px] leading-tight">{user?.name}</p>
+                  <p className="text-[10px] text-white/45 leading-tight">{roleLabel.replace(/^[^ ]+ /, "")}</p>
                 </div>
-                <span className="hidden md:block text-white/40 text-xs">▼</span>
+                <span className="hidden md:block text-white/35 text-xs ml-0.5">▾</span>
               </button>
 
               {userDropdown && (
-                <div className="absolute right-0 mt-2 w-56 bg-[#1e3a5f] border border-white/10 rounded-2xl shadow-2xl shadow-black/40 p-2 z-[60]">
-
+                <div className="absolute right-0 mt-2 w-56 bg-[#1a3055] border border-white/12 rounded-2xl shadow-2xl shadow-black/50 p-2 z-[60]">
                   {/* User header */}
-                  <div className="px-3 py-2.5 border-b border-white/10 mb-1">
-                    <p className="text-white text-sm font-bold truncate">{user?.name}</p>
-                    <p className="text-white/40 text-xs truncate">{user?.email}</p>
-                    <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      isAdmin    ? "bg-purple-500/20 border-purple-500/30 text-purple-300" :
-                      isRecruiter? "bg-amber-500/20 border-amber-500/30 text-amber-300" :
-                                   "bg-blue-500/20 border-blue-500/30 text-blue-300"
-                    }`}>
-                      {isAdmin ? "⚡ Admin" : isRecruiter ? "🏢 Recruiter" : "👤 Job Seeker"}
+                  <div className="px-3 py-3 border-b border-white/10 mb-1">
+                    <p className="text-white text-sm font-bold truncate leading-tight">{user?.name}</p>
+                    <p className="text-white/40 text-xs truncate mt-0.5">{user?.email}</p>
+                    <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${rolePill}`}>
+                      {roleLabel}
                     </span>
                   </div>
 
                   {isAdmin ? (
-                    <Link to="/admin" className="flex items-center gap-2 px-3 py-2 text-sm text-purple-300 hover:bg-purple-500/10 rounded-xl transition">
+                    <Link to="/admin" className="flex items-center gap-2 px-3 py-2 text-sm text-purple-300 hover:bg-purple-500/10 rounded-xl transition-colors">
                       ⚡ Admin Panel
                     </Link>
                   ) : (
@@ -250,7 +254,7 @@ export default function Navbar() {
                       <Link
                         key={link.to}
                         to={link.to}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:bg-white/10 rounded-xl transition"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-white/65 hover:bg-white/10 rounded-xl transition-colors"
                       >
                         {link.icon} {link.label}
                       </Link>
@@ -262,7 +266,7 @@ export default function Navbar() {
                       <div className="border-t border-white/10 my-1" />
                       <Link
                         to="/recruiter/create-job"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:bg-white/10 rounded-xl transition"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-white/65 hover:bg-white/10 rounded-xl transition-colors"
                       >
                         ➕ Post a Job
                       </Link>
@@ -272,7 +276,7 @@ export default function Navbar() {
                   <div className="border-t border-white/10 my-1" />
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 rounded-xl transition"
+                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 rounded-xl transition-colors"
                   >
                     ↩ Sign Out
                   </button>
@@ -284,7 +288,7 @@ export default function Navbar() {
           {/* MOBILE HAMBURGER */}
           <button
             onClick={() => setMobileOpen(o => !o)}
-            className="md:hidden w-9 h-9 flex items-center justify-center text-white bg-white/10 border border-white/10 rounded-lg text-lg"
+            className="md:hidden w-9 h-9 flex items-center justify-center text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-lg transition-colors"
             aria-label="Menu"
           >
             {mobileOpen ? "✕" : "☰"}
@@ -294,26 +298,37 @@ export default function Navbar() {
 
       {/* ── MOBILE MENU ── */}
       <div
-        className={`md:hidden bg-[#0f2d52] border-t border-white/10 overflow-hidden transition-all duration-300 ${
-          mobileOpen ? "max-h-[500px] py-4" : "max-h-0"
+        className={`md:hidden bg-[#0f2d52]/98 border-t border-white/10 overflow-hidden transition-all duration-300 backdrop-blur-md ${
+          mobileOpen ? "max-h-[520px] py-4" : "max-h-0"
         }`}
       >
-        <div className="px-6 flex flex-col gap-1">
+        <div className="px-4 flex flex-col gap-1">
           {isAuthenticated ? (
             <>
               {/* User info pill */}
-              <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-3 py-2.5 mb-2">
-                <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="flex items-center gap-3 bg-white/6 border border-white/10 rounded-2xl px-3 py-3 mb-2">
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0">
                   {user?.name?.[0]?.toUpperCase()}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-bold truncate">{user?.name}</p>
-                  <p className="text-white/40 text-xs">{isRecruiter ? "Recruiter" : "Job Seeker"}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-white text-sm font-bold truncate leading-tight">{user?.name}</p>
+                  <p className="text-white/40 text-xs mt-0.5">{user?.email}</p>
                 </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${rolePill}`}>
+                  {roleLabel}
+                </span>
               </div>
 
+              {/* Links */}
               {isAdmin ? (
-                <NavLink to="/admin" className="flex items-center gap-2 px-3 py-2 text-purple-300 hover:bg-white/10 rounded-xl text-sm font-semibold">
+                <NavLink
+                  to="/admin"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      isActive ? "text-purple-300 bg-purple-500/20" : "text-purple-300/70 hover:bg-white/10 hover:text-purple-300"
+                    }`
+                  }
+                >
                   ⚡ Admin Panel
                 </NavLink>
               ) : (
@@ -322,18 +337,26 @@ export default function Navbar() {
                     key={link.to}
                     to={link.to}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition ${
-                        isActive ? "text-blue-300 bg-blue-500/20" : "text-white/70 hover:bg-white/10"
+                      `flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                        isActive ? "text-blue-300 bg-blue-500/20" : "text-white/65 hover:bg-white/10 hover:text-white"
                       }`
                     }
                   >
                     {link.icon} {link.label}
+                    {link.to === "/my-applications" && appCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        {appCount}
+                      </span>
+                    )}
                   </NavLink>
                 ))
               )}
 
               {isRecruiter && (
-                <NavLink to="/recruiter/create-job" className="flex items-center gap-2 px-3 py-2 text-white/70 hover:bg-white/10 rounded-xl text-sm font-semibold">
+                <NavLink
+                  to="/recruiter/create-job"
+                  className="flex items-center gap-2 px-3 py-2.5 text-white/65 hover:bg-white/10 hover:text-white rounded-xl text-sm font-semibold transition-colors"
+                >
                   ➕ Post a Job
                 </NavLink>
               )}
@@ -341,16 +364,16 @@ export default function Navbar() {
               <div className="border-t border-white/10 my-1" />
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-red-300 hover:bg-red-500/10 rounded-xl text-sm font-bold w-full text-left"
+                className="flex items-center gap-2 px-3 py-2.5 text-red-300 hover:bg-red-500/10 rounded-xl text-sm font-bold w-full text-left transition-colors"
               >
                 ↩ Sign Out
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/jobs"     className="px-3 py-2 text-white/70 hover:text-white rounded-xl text-sm">🔍 Browse Jobs</NavLink>
-              <NavLink to="/login"    className="px-3 py-2 text-white/70 hover:text-white rounded-xl text-sm">🔐 Login</NavLink>
-              <NavLink to="/register" className="px-3 py-2 text-white/70 hover:text-white rounded-xl text-sm">✨ Sign Up</NavLink>
+              <NavLink to="/jobs"     className="flex items-center gap-2 px-3 py-2.5 text-white/65 hover:text-white hover:bg-white/10 rounded-xl text-sm font-semibold transition-colors">🔍 Browse Jobs</NavLink>
+              <NavLink to="/login"    className="flex items-center gap-2 px-3 py-2.5 text-white/65 hover:text-white hover:bg-white/10 rounded-xl text-sm font-semibold transition-colors">🔐 Login</NavLink>
+              <NavLink to="/register" className="flex items-center gap-2 px-3 py-2.5 text-white font-bold bg-blue-600 hover:bg-blue-700 rounded-xl text-sm transition-colors">✨ Sign Up</NavLink>
             </>
           )}
         </div>

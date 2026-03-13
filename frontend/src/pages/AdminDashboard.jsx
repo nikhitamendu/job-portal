@@ -14,130 +14,31 @@ const timeAgo = (d) => {
   return `${Math.floor(s / 86400)}d ago`;
 };
 
-/* ─── Styles ─── */
-const S = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg,#060d1a 0%,#0a1628 50%,#0d1f3a 100%)",
-    color: "white",
-    fontFamily: "'Sora',sans-serif",
-  },
-  sidebar: {
-    width: 240,
-    minHeight: "100vh",
-    background: "rgba(255,255,255,0.04)",
-    borderRight: "1px solid rgba(255,255,255,0.08)",
-    display: "flex",
-    flexDirection: "column",
-    padding: "28px 16px",
-    position: "sticky",
-    top: 0,
-    flexShrink: 0,
-  },
-  navBtn: (active) => ({
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: "none",
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 600,
-    fontFamily: "'Sora',sans-serif",
-    width: "100%",
-    textAlign: "left",
-    transition: "all 0.15s",
-    background: active ? "rgba(37,99,235,0.25)" : "transparent",
-    color: active ? "#93c5fd" : "rgba(255,255,255,0.6)",
-    borderLeft: active ? "3px solid #3b82f6" : "3px solid transparent",
-  }),
-  card: {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 16,
-    padding: "24px",
-    backdropFilter: "blur(10px)",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  th: {
-    padding: "10px 14px",
-    textAlign: "left",
-    fontSize: 11,
-    fontWeight: 700,
-    color: "rgba(255,255,255,0.4)",
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-  },
-  td: {
-    padding: "13px 14px",
-    fontSize: 13,
-    color: "rgba(255,255,255,0.85)",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-    verticalAlign: "middle",
-  },
-  badge: (color) => ({
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "3px 10px",
-    borderRadius: 99,
-    fontSize: 11,
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    ...color,
-  }),
-  btn: (variant = "danger") => ({
-    padding: "5px 12px",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 700,
-    fontFamily: "'Sora',sans-serif",
-    transition: "all 0.15s",
-    ...(variant === "danger"
-      ? { background: "rgba(239,68,68,0.15)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.25)" }
-      : variant === "success"
-      ? { background: "rgba(34,197,94,0.15)", color: "#86efac", border: "1px solid rgba(34,197,94,0.25)" }
-      : { background: "rgba(59,130,246,0.15)", color: "#93c5fd", border: "1px solid rgba(59,130,246,0.25)" }),
-  }),
-};
-
-const ROLE_BADGE = {
-  user:      { background: "rgba(37,99,235,0.2)",  border: "1px solid rgba(37,99,235,0.35)",   color: "#93c5fd"  },
-  recruiter: { background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.35)", color: "#fcd34d"  },
-  admin:     { background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.35)", color: "#d8b4fe"  },
-};
-
 /* ═══════════════════════════════════════════
    STAT CARD
 ═══════════════════════════════════════════ */
 function StatCard({ icon, label, value, accent, sub }) {
+  const colorMap = {
+    "#3b82f6": "bg-blue-500/20 border-blue-500/30 text-blue-400",
+    "#f59e0b": "bg-amber-500/20 border-amber-500/30 text-amber-400",
+    "#8b5cf6": "bg-violet-500/20 border-violet-500/30 text-violet-400",
+    "#10b981": "bg-emerald-500/20 border-emerald-500/30 text-emerald-400",
+  };
+  const subColorMap = {
+    "#3b82f6": "text-blue-400",
+    "#f59e0b": "text-amber-400",
+    "#8b5cf6": "text-violet-400",
+    "#10b981": "text-emerald-400",
+  };
   return (
-    <div style={{ ...S.card, display: "flex", alignItems: "center", gap: 18 }}>
-      <div style={{
-        width: 52, height: 52, borderRadius: 14,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 22, flexShrink: 0,
-        background: accent + "22", border: `1px solid ${accent}44`,
-      }}>
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm flex items-center gap-4 hover:bg-white/8 transition-colors">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border ${colorMap[accent] || "bg-blue-500/20 border-blue-500/30"}`}>
         {icon}
       </div>
       <div>
-        <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "white", lineHeight: 1.1 }}>
-          {fmt(value)}
-        </p>
-        <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>
-          {label}
-        </p>
-        {sub && (
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: accent, fontWeight: 600 }}>{sub}</p>
-        )}
+        <p className="text-2xl font-extrabold text-white leading-tight">{fmt(value)}</p>
+        <p className="text-xs text-white/45 font-semibold mt-0.5">{label}</p>
+        {sub && <p className={`text-xs font-semibold mt-0.5 ${subColorMap[accent] || "text-blue-400"}`}>{sub}</p>}
       </div>
     </div>
   );
@@ -148,36 +49,35 @@ function StatCard({ icon, label, value, accent, sub }) {
 ═══════════════════════════════════════════ */
 function OverviewTab({ stats }) {
   if (!stats) return (
-    <div style={{ textAlign: "center", padding: 60, color: "rgba(255,255,255,0.3)" }}>
-      Loading stats…
+    <div className="flex items-center justify-center py-16 text-white/30 text-sm">
+      <div className="text-center">
+        <div className="text-4xl mb-3 animate-pulse">📊</div>
+        Loading stats…
+      </div>
     </div>
   );
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: "white" }}>
-        Platform Overview
-      </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))", gap: 16, marginBottom: 32 }}>
-        <StatCard icon="👤" label="Job Seekers"    value={stats.totalUsers}        accent="#3b82f6" />
-        <StatCard icon="🏢" label="Recruiters"     value={stats.totalRecruiters}   accent="#f59e0b" />
-        <StatCard icon="💼" label="Total Jobs"     value={stats.totalJobs}         accent="#8b5cf6"
+      <h2 className="text-xl font-extrabold text-white mb-6">Platform Overview</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard icon="👤" label="Job Seekers"   value={stats.totalUsers}        accent="#3b82f6" />
+        <StatCard icon="🏢" label="Recruiters"    value={stats.totalRecruiters}   accent="#f59e0b" />
+        <StatCard icon="💼" label="Total Jobs"    value={stats.totalJobs}         accent="#8b5cf6"
           sub={`${fmt(stats.activeJobs)} active · ${fmt(stats.inactiveJobs)} inactive`}
         />
         <StatCard icon="📋" label="Applications"  value={stats.totalApplications} accent="#10b981" />
       </div>
 
-      <div style={S.card}>
-        <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
-          Quick Stats
-        </h3>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+        <h3 className="text-sm font-bold text-white/60 mb-4">Quick Stats</h3>
         {[
-          { label: "Active Job Listings",   val: fmt(stats.activeJobs) },
-          { label: "Inactive / Expired",    val: fmt(stats.inactiveJobs) },
-          { label: "Avg Applications/Job",  val: stats.totalJobs ? (stats.totalApplications / stats.totalJobs).toFixed(1) : "0" },
+          { label: "Active Job Listings",  val: fmt(stats.activeJobs) },
+          { label: "Inactive / Expired",   val: fmt(stats.inactiveJobs) },
+          { label: "Avg Applications/Job", val: stats.totalJobs ? (stats.totalApplications / stats.totalJobs).toFixed(1) : "0" },
         ].map(({ label, val }) => (
-          <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: 13 }}>
-            <span style={{ color: "rgba(255,255,255,0.55)" }}>{label}</span>
-            <span style={{ fontWeight: 700, color: "white" }}>{val}</span>
+          <div key={label} className="flex justify-between items-center py-3 border-b border-white/6 last:border-0">
+            <span className="text-sm text-white/50">{label}</span>
+            <span className="text-sm font-bold text-white">{val}</span>
           </div>
         ))}
       </div>
@@ -238,23 +138,31 @@ function UsersTab() {
     }
   };
 
+  const ROLE_BADGE = {
+    user:      "bg-blue-500/20 border-blue-500/30 text-blue-300",
+    recruiter: "bg-amber-500/20 border-amber-500/30 text-amber-300",
+    admin:     "bg-purple-500/20 border-purple-500/30 text-purple-300",
+  };
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "white" }}>
-          User Management <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>({fmt(total)})</span>
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 className="text-xl font-extrabold text-white">
+          User Management
+          <span className="text-sm text-white/40 font-medium ml-2">({fmt(total)})</span>
         </h2>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className="flex flex-wrap gap-2">
           <input
             placeholder="Search name or email…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontFamily: "'Sora',sans-serif", outline: "none", width: 220 }}
+            className="px-3 py-2 rounded-xl bg-white/8 border border-white/12 text-white text-sm placeholder-white/30 outline-none focus:border-blue-500/50 focus:bg-white/10 transition w-48"
           />
           <select
             value={roleFilter}
             onChange={(e) => { setRole(e.target.value); setPage(1); }}
-            style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontFamily: "'Sora',sans-serif", outline: "none" }}
+            className="px-3 py-2 rounded-xl bg-white/8 border border-white/12 text-white text-sm outline-none focus:border-blue-500/50 cursor-pointer"
           >
             <option value="all">All Roles</option>
             <option value="user">Job Seeker</option>
@@ -264,41 +172,46 @@ function UsersTab() {
         </div>
       </div>
 
-      <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
+      {/* Table card */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
           {loading ? (
-            <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)" }}>Loading…</div>
+            <div className="flex items-center justify-center py-12 text-white/30 text-sm gap-2">
+              <div className="w-5 h-5 border-2 border-white/20 border-t-blue-400 rounded-full animate-spin" />
+              Loading…
+            </div>
           ) : users.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)" }}>No users found</div>
+            <div className="text-center py-12 text-white/30 text-sm">No users found</div>
           ) : (
-            <table style={S.table}>
+            <table className="w-full border-collapse">
               <thead>
                 <tr>
                   {["User", "Role", "Verified", "Joined", "Actions"].map((h) => (
-                    <th key={h} style={S.th}>{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-white/40 uppercase tracking-widest border-b border-white/8">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u._id} style={{ transition: "background 0.12s" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                  >
-                    <td style={S.td}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+                  <tr key={u._id} className="hover:bg-white/3 transition-colors">
+                    {/* User */}
+                    <td className="px-4 py-3 border-b border-white/5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white flex-shrink-0">
                           {u.name?.[0]?.toUpperCase() || "?"}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, color: "white", fontSize: 13 }}>{u.name}</div>
-                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{u.email}</div>
+                          <div className="text-sm font-bold text-white">{u.name}</div>
+                          <div className="text-xs text-white/40">{u.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={S.td}>
+                    {/* Role */}
+                    <td className="px-4 py-3 border-b border-white/5">
                       {u._id === me._id ? (
-                        <span style={S.badge(ROLE_BADGE[u.role] || ROLE_BADGE.user)}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${ROLE_BADGE[u.role] || ROLE_BADGE.user}`}>
                           {u.role} (you)
                         </span>
                       ) : (
@@ -306,7 +219,7 @@ function UsersTab() {
                           disabled={roleChanging[u._id]}
                           value={u.role}
                           onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                          style={{ padding: "4px 10px", borderRadius: 8, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", outline: "none" }}
+                          className="px-2 py-1 rounded-lg bg-white/8 border border-white/15 text-white text-xs outline-none cursor-pointer disabled:opacity-50"
                         >
                           <option value="user">Job Seeker</option>
                           <option value="recruiter">Recruiter</option>
@@ -314,20 +227,25 @@ function UsersTab() {
                         </select>
                       )}
                     </td>
-                    <td style={S.td}>
-                      <span style={S.badge(u.isVerified
-                        ? { background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#86efac" }
-                        : { background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }
-                      )}>
+                    {/* Verified */}
+                    <td className="px-4 py-3 border-b border-white/5">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                        u.isVerified
+                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                          : "bg-red-500/15 border-red-500/30 text-red-400"
+                      }`}>
                         {u.isVerified ? "✓ Yes" : "✗ No"}
                       </span>
                     </td>
-                    <td style={{ ...S.td, color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                      {timeAgo(u.createdAt)}
-                    </td>
-                    <td style={S.td}>
+                    {/* Joined */}
+                    <td className="px-4 py-3 border-b border-white/5 text-xs text-white/45">{timeAgo(u.createdAt)}</td>
+                    {/* Actions */}
+                    <td className="px-4 py-3 border-b border-white/5">
                       {u._id !== me._id && (
-                        <button style={S.btn("danger")} onClick={() => handleDelete(u._id, u.name)}>
+                        <button
+                          onClick={() => handleDelete(u._id, u.name)}
+                          className="px-2.5 py-1 rounded-lg bg-red-500/15 border border-red-500/25 text-red-400 text-xs font-bold hover:bg-red-500/25 transition-colors"
+                        >
                           🗑 Delete
                         </button>
                       )}
@@ -342,13 +260,19 @@ function UsersTab() {
 
       {/* Pagination */}
       {total > 15 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+        <div className="flex justify-center gap-2 mt-4 flex-wrap">
           {[...Array(Math.ceil(total / 15))].map((_, i) => (
-            <button key={i} onClick={() => setPage(i + 1)}
-              style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "'Sora',sans-serif",
-                background: page === i + 1 ? "#2563eb" : "rgba(255,255,255,0.08)",
-                color: page === i + 1 ? "white" : "rgba(255,255,255,0.5)" }}
-            >{i + 1}</button>
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`w-9 h-9 rounded-lg text-xs font-bold transition-colors ${
+                page === i + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/8 text-white/50 hover:bg-white/15 hover:text-white"
+              }`}
+            >
+              {i + 1}
+            </button>
           ))}
         </div>
       )}
@@ -409,21 +333,23 @@ function JobsTab() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "white" }}>
-          Job Management <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>({fmt(total)})</span>
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 className="text-xl font-extrabold text-white">
+          Job Management
+          <span className="text-sm text-white/40 font-medium ml-2">({fmt(total)})</span>
         </h2>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className="flex flex-wrap gap-2">
           <input
             placeholder="Search title or city…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontFamily: "'Sora',sans-serif", outline: "none", width: 220 }}
+            className="px-3 py-2 rounded-xl bg-white/8 border border-white/12 text-white text-sm placeholder-white/30 outline-none focus:border-blue-500/50 focus:bg-white/10 transition w-48"
           />
           <select
             value={statusFilter}
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontFamily: "'Sora',sans-serif", outline: "none" }}
+            className="px-3 py-2 rounded-xl bg-white/8 border border-white/12 text-white text-sm outline-none focus:border-blue-500/50 cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -432,56 +358,66 @@ function JobsTab() {
         </div>
       </div>
 
-      <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
+      {/* Table card */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
           {loading ? (
-            <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)" }}>Loading…</div>
+            <div className="flex items-center justify-center py-12 text-white/30 text-sm gap-2">
+              <div className="w-5 h-5 border-2 border-white/20 border-t-blue-400 rounded-full animate-spin" />
+              Loading…
+            </div>
           ) : jobs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)" }}>No jobs found</div>
+            <div className="text-center py-12 text-white/30 text-sm">No jobs found</div>
           ) : (
-            <table style={S.table}>
+            <table className="w-full border-collapse">
               <thead>
                 <tr>
                   {["Job Title", "Recruiter", "Applications", "Status", "Posted", "Actions"].map((h) => (
-                    <th key={h} style={S.th}>{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-white/40 uppercase tracking-widest border-b border-white/8">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {jobs.map((j) => (
-                  <tr key={j._id} style={{ transition: "background 0.12s" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                  >
-                    <td style={S.td}>
-                      <div style={{ fontWeight: 700, color: "white", fontSize: 13, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {j.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                        {j.employmentType} · {j.workplaceType}
-                      </div>
+                  <tr key={j._id} className="hover:bg-white/3 transition-colors">
+                    {/* Job */}
+                    <td className="px-4 py-3 border-b border-white/5">
+                      <div className="text-sm font-bold text-white max-w-[180px] truncate">{j.title}</div>
+                      <div className="text-xs text-white/35 mt-0.5">{j.employmentType} · {j.workplaceType}</div>
                     </td>
-                    <td style={S.td}>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{j.postedBy?.name || "—"}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{j.postedBy?.companyName || j.postedBy?.email || ""}</div>
+                    {/* Recruiter */}
+                    <td className="px-4 py-3 border-b border-white/5">
+                      <div className="text-sm text-white/75">{j.postedBy?.name || "—"}</div>
+                      <div className="text-xs text-white/35">{j.postedBy?.companyName || j.postedBy?.email || ""}</div>
                     </td>
-                    <td style={{ ...S.td, textAlign: "center" }}>
-                      <span style={{ fontWeight: 800, color: "#93c5fd" }}>{j.applicationCount}</span>
+                    {/* Applications */}
+                    <td className="px-4 py-3 border-b border-white/5 text-center">
+                      <span className="text-sm font-extrabold text-blue-300">{j.applicationCount}</span>
                     </td>
-                    <td style={S.td}>
+                    {/* Status toggle */}
+                    <td className="px-4 py-3 border-b border-white/5">
                       <button
                         disabled={toggling[j._id]}
                         onClick={() => handleToggle(j._id)}
-                        style={S.btn(j.isActive ? "success" : "danger")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors disabled:opacity-50 ${
+                          j.isActive
+                            ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25"
+                            : "bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25"
+                        }`}
                       >
                         {toggling[j._id] ? "…" : j.isActive ? "✓ Active" : "✗ Inactive"}
                       </button>
                     </td>
-                    <td style={{ ...S.td, color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                      {timeAgo(j.createdAt)}
-                    </td>
-                    <td style={S.td}>
-                      <button style={S.btn("danger")} onClick={() => handleDelete(j._id, j.title)}>
+                    {/* Posted */}
+                    <td className="px-4 py-3 border-b border-white/5 text-xs text-white/45">{timeAgo(j.createdAt)}</td>
+                    {/* Delete */}
+                    <td className="px-4 py-3 border-b border-white/5">
+                      <button
+                        onClick={() => handleDelete(j._id, j.title)}
+                        className="px-2.5 py-1 rounded-lg bg-red-500/15 border border-red-500/25 text-red-400 text-xs font-bold hover:bg-red-500/25 transition-colors"
+                      >
                         🗑 Delete
                       </button>
                     </td>
@@ -493,14 +429,21 @@ function JobsTab() {
         </div>
       </div>
 
+      {/* Pagination */}
       {total > 15 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+        <div className="flex justify-center gap-2 mt-4 flex-wrap">
           {[...Array(Math.ceil(total / 15))].map((_, i) => (
-            <button key={i} onClick={() => setPage(i + 1)}
-              style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "'Sora',sans-serif",
-                background: page === i + 1 ? "#2563eb" : "rgba(255,255,255,0.08)",
-                color: page === i + 1 ? "white" : "rgba(255,255,255,0.5)" }}
-            >{i + 1}</button>
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`w-9 h-9 rounded-lg text-xs font-bold transition-colors ${
+                page === i + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/8 text-white/50 hover:bg-white/15 hover:text-white"
+              }`}
+            >
+              {i + 1}
+            </button>
           ))}
         </div>
       )}
@@ -511,11 +454,18 @@ function JobsTab() {
 /* ═══════════════════════════════════════════
    MAIN ADMIN DASHBOARD
 ═══════════════════════════════════════════ */
+const NAV = [
+  { key: "overview", icon: "📊", label: "Overview" },
+  { key: "users",    icon: "👥", label: "Users" },
+  { key: "jobs",     icon: "💼", label: "Jobs" },
+];
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab]   = useState("overview");
   const [stats, setStats] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     api.get("/admin/stats")
@@ -528,97 +478,143 @@ export default function AdminDashboard() {
     navigate("/login");
   };
 
-  const NAV = [
-    { key: "overview", icon: "📊", label: "Overview" },
-    { key: "users",    icon: "👥", label: "Users" },
-    { key: "jobs",     icon: "💼", label: "Jobs" },
-  ];
+  const handleTab = (key) => {
+    setTab(key);
+    setSidebarOpen(false);
+  };
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        option { background: #1e3a5f; color: white; }
-        input::placeholder { color: rgba(255,255,255,0.3) !important; }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-[#060d1a] via-[#0a1628] to-[#0d1f3a] text-white" style={{ fontFamily: "'Sora', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap'); option { background:#1e3a5f; color:white; }`}</style>
 
-      <div style={{ ...S.page, display: "flex" }}>
-        {/* ─── SIDEBAR ─── */}
-        <aside style={S.sidebar}>
+      {/* ── MOBILE HEADER BAR ── */}
+      <header className="lg:hidden sticky top-0 z-40 flex items-center gap-3 px-4 h-14 bg-[#0a1628]/95 border-b border-white/10 backdrop-blur-md">
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          className="w-9 h-9 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white text-lg"
+          aria-label="Toggle menu"
+        >
+          {sidebarOpen ? "✕" : "☰"}
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-extrabold text-sm">H</div>
+          <span className="font-extrabold text-base">Hire<span className="text-blue-400">Hub</span></span>
+        </div>
+        <div className="ml-auto">
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300">⚡ Admin</span>
+        </div>
+      </header>
+
+      <div className="flex relative">
+
+        {/* ── MOBILE OVERLAY ── */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* ── SIDEBAR ── */}
+        <aside className={`
+          fixed lg:sticky top-0 left-0 z-40 w-60 min-h-screen lg:min-h-screen
+          bg-[#070e1c] lg:bg-transparent border-r border-white/8
+          flex flex-col py-7 px-4 transition-transform duration-300 lg:translate-x-0 lg:flex-shrink-0
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}>
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 18, color: "white" }}>
-              H
-            </div>
+          <div className="hidden lg:flex items-center gap-2.5 mb-8">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-extrabold text-lg">H</div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: "white" }}>
-                Hire<span style={{ color: "#60a5fa" }}>Hub</span>
-              </div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 1 }}>Admin Panel</div>
+              <div className="font-extrabold text-base leading-tight">Hire<span className="text-blue-400">Hub</span></div>
+              <div className="text-[10px] text-white/35 font-semibold mt-0.5">Admin Panel</div>
             </div>
           </div>
 
           {/* Nav */}
-          <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+          <nav className="flex flex-col gap-1 flex-1">
             {NAV.map(({ key, icon, label }) => (
-              <button key={key} style={S.navBtn(tab === key)} onClick={() => setTab(key)}>
-                <span style={{ fontSize: 16 }}>{icon}</span>
+              <button
+                key={key}
+                onClick={() => handleTab(key)}
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold w-full text-left transition-all border-l-[3px] ${
+                  tab === key
+                    ? "bg-blue-500/20 text-blue-300 border-blue-500"
+                    : "transparent text-white/55 border-transparent hover:bg-white/6 hover:text-white"
+                }`}
+              >
+                <span className="text-base">{icon}</span>
                 {label}
               </button>
             ))}
           </nav>
 
           {/* Admin info */}
-          <div style={{ marginTop: "auto", padding: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: "white" }}>
+          <div className="mt-auto pt-4 border-t border-white/8">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-extrabold text-sm flex-shrink-0">
                 {user?.name?.[0]?.toUpperCase() || "A"}
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</div>
-                <div style={{ fontSize: 10, color: "#d8b4fe", fontWeight: 600 }}>⚡ Administrator</div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-white truncate">{user?.name}</div>
+                <div className="text-[10px] text-purple-300 font-semibold">⚡ Administrator</div>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              style={{ width: "100%", padding: "7px 0", borderRadius: 8, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)", color: "#fca5a5", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Sora',sans-serif" }}
+              className="w-full py-2 rounded-xl bg-red-500/12 border border-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors"
             >
               ↩ Sign Out
             </button>
           </div>
         </aside>
 
-        {/* ─── MAIN CONTENT ─── */}
-        <main style={{ flex: 1, padding: "36px 32px", overflowY: "auto", minWidth: 0 }}>
-          {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#7c3aed,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "white" }}>
-                ⚡
-              </div>
+        {/* ── MAIN CONTENT ── */}
+        <main className="flex-1 min-w-0 p-5 lg:p-8">
+          {/* Page header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-lg hidden lg:flex">⚡</div>
               <div>
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "white" }}>Admin Dashboard</h1>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Full platform control</p>
+                <h1 className="text-xl lg:text-2xl font-extrabold text-white leading-tight">Admin Dashboard</h1>
+                <p className="text-xs text-white/40">Full platform control</p>
               </div>
             </div>
-            {/* Stat quick bar */}
+
+            {/* Quick stat bar */}
             {stats && (
-              <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+              <div className="flex flex-wrap gap-4 mt-4">
                 {[
-                  { label: "Users",        val: fmt(stats.totalUsers),        color: "#3b82f6" },
-                  { label: "Recruiters",   val: fmt(stats.totalRecruiters),   color: "#f59e0b" },
-                  { label: "Active Jobs",  val: fmt(stats.activeJobs),        color: "#10b981" },
-                  { label: "Applications",val: fmt(stats.totalApplications),  color: "#8b5cf6" },
+                  { label: "Users",        val: fmt(stats.totalUsers),       color: "bg-blue-500"    },
+                  { label: "Recruiters",   val: fmt(stats.totalRecruiters),  color: "bg-amber-500"   },
+                  { label: "Active Jobs",  val: fmt(stats.activeJobs),       color: "bg-emerald-500" },
+                  { label: "Applications", val: fmt(stats.totalApplications),color: "bg-violet-500"  },
                 ].map(({ label, val, color }) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{label}:</span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "white" }}>{val}</span>
+                  <div key={label} className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${color} flex-shrink-0`} />
+                    <span className="text-xs text-white/50">{label}:</span>
+                    <span className="text-xs font-extrabold text-white">{val}</span>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Mobile tab bar */}
+          <div className="lg:hidden flex gap-2 mb-6 bg-white/5 border border-white/8 rounded-2xl p-1.5">
+            {NAV.map(({ key, icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  tab === key
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-white/50 hover:text-white"
+                }`}
+              >
+                {icon} {label}
+              </button>
+            ))}
           </div>
 
           {/* Tab content */}
@@ -627,6 +623,6 @@ export default function AdminDashboard() {
           {tab === "jobs"     && <JobsTab />}
         </main>
       </div>
-    </>
+    </div>
   );
 }

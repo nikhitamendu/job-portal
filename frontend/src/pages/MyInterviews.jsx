@@ -205,16 +205,42 @@ const MyInterviews = () => {
                       >
                         Cancel Meeting
                       </button>
-                      {iv.type === "Online" && (
-                        <a
-                          href={iv.location}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full sm:flex-[2] py-2.5 sm:py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 text-center"
-                        >
-                          Join Now
-                        </a>
-                      )}
+                      {iv.type === "Online" && (() => {
+                        const now = new Date();
+                        const ivDate = new Date(iv.date);
+                        const diffMins = (ivDate - now) / (1000 * 60);
+                        const isActive = diffMins <= 10 && diffMins >= -(iv.duration || 60);
+                        const formattedLink = iv.location 
+                          ? (iv.location.startsWith("http") ? iv.location : `https://${iv.location}`)
+                          : "#";
+
+                        if (isActive && formattedLink !== "#") {
+                          return (
+                            <a
+                              href={formattedLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full sm:flex-[2] py-2.5 sm:py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 text-center flex flex-col items-center justify-center leading-tight"
+                            >
+                              Join Now
+                              <span className="text-[9px] opacity-80 font-bold uppercase mt-0.5 tracking-tighter animate-pulse">Meeting is live</span>
+                            </a>
+                          );
+                        } else {
+                          return (
+                            <button
+                              disabled
+                              title="Join button activates 10 mins before start"
+                              className="w-full sm:flex-[2] py-2.5 sm:py-3 bg-slate-100 border border-slate-200 text-slate-400 text-xs font-black rounded-xl cursor-not-allowed flex flex-col items-center justify-center leading-tight"
+                            >
+                              Join Now
+                              <span className="text-[9px] opacity-60 font-bold uppercase mt-0.5 tracking-tighter">
+                                {diffMins > 10 ? `Available in ${Math.round(diffMins)}m` : "Meeting Ended"}
+                              </span>
+                            </button>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                 </div>
