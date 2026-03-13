@@ -775,7 +775,7 @@ export default function RecruiterApplicants() {
     setUpdatingId(appId);
     setConfirmModal(null);
     try {
-      await api.put(`/applications/${appId}/status`, { status });
+      await api.patch(`/applications/${appId}/status`, { status });
       toast.success(`Status updated to "${status}"`);
       await fetchApplicants();
     } catch (err) {
@@ -1307,7 +1307,7 @@ export default function RecruiterApplicants() {
               )}
               {confirmModal.status === "Shortlisted" && (
                 <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                  <p className="text-xs text-emerald-700">✓ Once shortlisted, this status cannot be changed further.</p>
+                  <p className="text-xs text-emerald-700">✓ The candidate will be notified and moved to the Shortlisted stage.</p>
                 </div>
               )}
             </div>

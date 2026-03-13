@@ -550,10 +550,10 @@ const MyApplications = () => {
     </div>
   );
 
-  const shortlisted = counts.Shortlisted;
+  const offered     = counts.Offer;
   const rejected    = counts.Rejected;
   const total       = applications.length;
-  const successRate = total > 0 ? Math.round((shortlisted / total) * 100) : 0;
+  const successRate = total > 0 ? Math.round((offered / total) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -627,7 +627,7 @@ const MyApplications = () => {
                 />
               </div>
               <p className="text-xs mt-1.5 text-white/30">
-                {shortlisted} shortlisted · {rejected} rejected · {counts.Applied + counts.Reviewed} in progress
+                {offered} offers · {rejected} rejected · {counts.Applied + counts.Reviewed + counts.Shortlisted + counts.Interview} in progress
               </p>
             </div>
           )}
@@ -723,12 +723,16 @@ const MyApplications = () => {
               const isRej  = app.status === "Rejected";
 
               const avatarBg =
-                isRej                        ? "from-red-500 to-red-600"       :
+                isRej                        ? "from-red-500 to-red-600"         :
+                app.status === "Offer"       ? "from-green-500 to-emerald-600"   :
+                app.status === "Interview"   ? "from-purple-500 to-purple-700"   :
                 app.status === "Shortlisted" ? "from-emerald-500 to-emerald-600" :
                                                "from-blue-600 to-indigo-600";
 
               const leftBorder =
                 isRej                        ? "border-l-4 border-l-red-500"      :
+                app.status === "Offer"       ? "border-l-4 border-l-green-500"    :
+                app.status === "Interview"   ? "border-l-4 border-l-purple-500"   :
                 app.status === "Shortlisted" ? "border-l-4 border-l-emerald-500"  :
                 app.status === "Reviewed"    ? "border-l-4 border-l-amber-400"    :
                                                "border-l-4 border-l-blue-500";
@@ -832,7 +836,7 @@ const MyApplications = () => {
                   </div>
 
                   {/* Expanded panel */}
-                  <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-96" : "max-h-0"}`}>
+                  <div className={`overflow-y-auto transition-all duration-300 ${isOpen ? "max-h-[480px]" : "max-h-0 overflow-hidden"}`}>
                     <div className="px-5 pb-5 border-t border-slate-100 pt-4">
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         <DetailField icon="🏢" label="Workplace"        value={app.job?.workplaceType   || "—"} />

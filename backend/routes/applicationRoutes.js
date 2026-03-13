@@ -53,7 +53,7 @@ router.get("/job/:jobId", auth, getApplicantsForJob);
 router.get("/recruiter/all", auth, getAllApplicantsForRecruiter);
 
 /* UPDATE STATUS */
-router.put("/:applicationId/status", auth, updateApplicationStatus);
+router.patch("/:applicationId/status", auth, updateApplicationStatus);
 
 /* WITHDRAW APPLICATION (Job Seeker) */
 router.delete("/withdraw/:jobId", auth, withdrawApplication);
