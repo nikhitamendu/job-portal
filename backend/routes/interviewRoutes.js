@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Namespace ? express.Namespace() : express.Router();
+const router = express.Router(); // ✅ Fixed: express.Namespace does not exist
 const {
   scheduleInterview,
   getMyInterviews,

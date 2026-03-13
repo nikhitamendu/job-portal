@@ -377,10 +377,14 @@ const JobApplicants = () => {
                             💬 Contact
                           </button>
                         </div>
-                        {(app.status === "Shortlisted" || app.status === "Interview") && (
+                        {(app.status === "Reviewed" || app.status === "Shortlisted" || app.status === "Interview") && (
                           <button
                             onClick={() => setSchedulingApp(app)}
-                            className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition"
+                            className={`w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                              app.status === "Shortlisted" 
+                                ? "text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100 animate-pulse border-2" 
+                                : "text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100"
+                            }`}
                           >
                             📅 Schedule Interview
                           </button>
