@@ -841,7 +841,7 @@ export default function RecruiterApplicants() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 overflow-x-hidden">
 
       {/* ══ HERO ══ */}
       <div
@@ -853,8 +853,8 @@ export default function RecruiterApplicants() {
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%)" }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-10">
-          <div className="flex items-start justify-between gap-5 flex-wrap">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3 border"
@@ -869,7 +869,7 @@ export default function RecruiterApplicants() {
             </div>
 
             {/* Stat boxes */}
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2 overflow-x-auto pb-1 flex-shrink-0">
               {[
                 { label: "Total",       count: counts.All,         color: "text-blue-300"    },
                 { label: "Shortlisted", count: counts.Shortlisted, color: "text-emerald-300" },
@@ -912,7 +912,7 @@ export default function RecruiterApplicants() {
 
       {/* ══ TABS ══ */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 flex overflow-x-auto">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex overflow-x-auto">
           {["All", "Applied", "Reviewed", "Shortlisted", "Interview", "Offer", "Rejected"].map(tab => (
             <button
               key={tab}
@@ -937,11 +937,11 @@ export default function RecruiterApplicants() {
       </div>
 
       {/* ══ BODY ══ */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* Filter bar */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3 mb-5 flex items-center gap-3 flex-wrap shadow-sm">
-          <div className="relative flex-1 min-w-48">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 mb-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 shadow-sm">
+          <div className="relative flex-1 min-w-0">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">🔍</span>
             <input
               className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 text-slate-900 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition"
@@ -1021,15 +1021,16 @@ export default function RecruiterApplicants() {
 
                   {/* Card body */}
                   <div className="p-5">
-                    <div className="flex items-start gap-4 flex-wrap">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
 
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-extrabold text-lg flex-shrink-0">
-                        {app.applicant?.name?.[0]?.toUpperCase() || "?"}
-                      </div>
+                      {/* Avatar + name row (always visible) */}
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-extrabold text-lg flex-shrink-0">
+                          {app.applicant?.name?.[0]?.toUpperCase() || "?"}
+                        </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-44">
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-900">{app.applicant?.name || "—"}</p>
                         <p className="text-xs text-slate-400 mt-0.5">{app.applicant?.email || "—"}</p>
                         {app.applicant?.phone && (
@@ -1063,10 +1064,11 @@ export default function RecruiterApplicants() {
                               value={app.applicant.education.map(e => e.degree).slice(0, 1).join(", ")} />
                           )}
                         </div>
-                      </div>
+                        </div>{/* close flex-1 min-w-0 info */}
+                      </div>{/* close flex items-start gap-3 avatar+info wrapper */}
 
                       {/* Actions */}
-                      <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                      <div className="flex flex-row flex-wrap sm:flex-col gap-2 sm:items-end sm:flex-shrink-0">
                         {app.applicant?.resumeFileId ? (
                           <a
                             href={`${import.meta.env.VITE_API_URL}/users/file/${app.applicant.resumeFileId}`}

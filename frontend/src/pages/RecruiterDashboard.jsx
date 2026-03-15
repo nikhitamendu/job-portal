@@ -111,7 +111,7 @@ export default function RecruiterDashboard() {
 
   /* ════════════════════════════════════ RENDER ════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
 
       {/* ── HERO HEADER ── */}
       <div className="bg-gradient-to-br from-slate-900 via-[#0a1f3d] to-slate-900 relative overflow-hidden">

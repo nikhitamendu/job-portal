@@ -95,30 +95,29 @@ export default function Navbar() {
     <NavLink
       to={link.to}
       className={({ isActive }) =>
-        `relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+        `relative flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-2 rounded-lg text-[13px] xl:text-sm font-semibold transition-all duration-150 ${
           isActive
             ? "text-blue-600 bg-blue-50"
             : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
         }`
       }
     >
-      <span className="text-base leading-none">{link.icon}</span>
-      {link.label}
+      <span className="text-base leading-none flex-shrink-0">{link.icon}</span>
+      <span className="truncate">{link.label}</span>
     </NavLink>
   );
 
   return (
     <nav
-      className={`sticky top-0 z-50 bg-white border-b border-slate-200 transition-shadow duration-200 ${
-        scrolled ? "shadow-md" : "shadow-sm"
+      className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-slate-100 ${
+        scrolled ? "bg-white/95 backdrop-blur-md shadow-sm py-1" : "bg-white py-2"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 gap-6">
+        <div className="flex items-center h-16 gap-2 lg:gap-4 xl:gap-6">
 
-          {/* ── LOGO ── */}
-          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-200 group-hover:shadow-blue-300 transition-shadow">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200 group-hover:shadow-blue-300 transition-shadow">
               H
             </div>
             <span className="text-slate-900 font-extrabold text-xl tracking-tight">
@@ -127,7 +126,7 @@ export default function Navbar() {
           </Link>
 
           {/* ── DESKTOP NAV LINKS ── */}
-          <div className="hidden md:flex items-center gap-0.5 flex-1">
+          <div className="hidden lg:flex items-center gap-0.5 flex-1 min-w-0">
             {isAuthenticated ? (
               isAdmin ? (
                 <NavLink
@@ -158,7 +157,7 @@ export default function Navbar() {
           </div>
 
           {/* ── RIGHT SIDE ── */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
 
             {/* NOTIFICATIONS */}
             {isAuthenticated && (
@@ -192,13 +191,13 @@ export default function Navbar() {
               <>
                 <NavLink
                   to="/login"
-                  className="hidden md:block text-slate-600 hover:text-slate-900 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="hidden lg:block text-slate-600 hover:text-slate-900 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   Log in
                 </NavLink>
                 <Link
                   to="/register"
-                  className="hidden md:block bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm shadow-blue-200"
+                  className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm shadow-blue-200"
                 >
                   Sign up →
                 </Link>
@@ -213,11 +212,11 @@ export default function Navbar() {
                   <div className="w-7 h-7 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm flex-shrink-0">
                     {user?.name?.[0]?.toUpperCase() || "U"}
                   </div>
-                  <div className="hidden md:block text-left">
+                  <div className="hidden lg:block text-left">
                     <p className="text-slate-800 text-xs font-bold truncate max-w-[100px] leading-tight">{user?.name}</p>
                     <p className="text-slate-400 text-[10px] leading-tight">{roleLabel}</p>
                   </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="hidden md:block w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="hidden lg:block w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -286,7 +285,7 @@ export default function Navbar() {
             {/* MOBILE HAMBURGER */}
             <button
               onClick={() => setMobileOpen(o => !o)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
               aria-label="Menu"
             >
               {mobileOpen ? (
@@ -305,11 +304,11 @@ export default function Navbar() {
 
       {/* ── MOBILE MENU ── */}
       <div
-        className={`md:hidden border-t border-slate-100 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`lg:hidden border-t border-slate-100 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
           mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="px-4 py-4 flex flex-col gap-1">
+        <div className="px-4 py-4 flex flex-col gap-1 lg:hidden">
           {isAuthenticated ? (
             <>
               {/* User info card */}
@@ -331,7 +330,7 @@ export default function Navbar() {
                 <NavLink
                   to="/admin"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    `flex lg:hidden items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                       isActive ? "text-purple-600 bg-purple-50" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`
                   }
