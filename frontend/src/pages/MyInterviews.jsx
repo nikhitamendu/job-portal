@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import { toast } from "react-toastify";
 
@@ -19,6 +19,9 @@ const statusDot = {
 const MyInterviews = () => {
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [now, setNow] = useState(new Date());
+  const timerRef = useRef(null);
 
   const fetchInterviews = async () => {
     try {
@@ -33,6 +36,9 @@ const MyInterviews = () => {
 
   useEffect(() => {
     fetchInterviews();
+    // Tick every 60 s so Join Now activates without a page refresh
+    timerRef.current = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timerRef.current);
   }, []);
 
   const handleStatusUpdate = async (id, status) => {
@@ -57,6 +63,15 @@ const MyInterviews = () => {
       </div>
     );
 
+  const counts = interviews.reduce((acc, iv) => {
+    acc[iv.status] = (acc[iv.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const visible = filter === "all"
+    ? interviews
+    : interviews.filter((iv) => iv.status === filter);
+
   return (
     <div className="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
@@ -71,8 +86,26 @@ const MyInterviews = () => {
           </p>
         </div>
 
+        {/* Filter tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+          {["all", "Scheduled", "Completed", "Cancelled", "Rescheduled"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border-2 transition whitespace-nowrap ${
+                filter === f
+                  ? "bg-blue-600 border-blue-600 text-white shadow shadow-blue-200"
+                  : "bg-white border-slate-200 text-slate-500 hover:border-blue-300"
+              }`}
+            >
+              {f === "all" ? "All" : f}
+              {f !== "all" && counts[f] ? ` (${counts[f]})` : ""}
+            </button>
+          ))}
+        </div>
+
         {/* Empty state */}
-        {interviews.length === 0 ? (
+        {visible.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-3xl p-10 sm:p-16 text-center shadow-sm">
             <div className="text-5xl sm:text-6xl mb-4">📅</div>
             <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-2">
@@ -84,7 +117,7 @@ const MyInterviews = () => {
           </div>
         ) : (
           <div className="grid gap-4 sm:gap-6">
-            {interviews.map((iv) => (
+            {visible.map((iv) => (
               <div
                 key={iv._id}
                 className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
@@ -206,7 +239,6 @@ const MyInterviews = () => {
                         Cancel Meeting
                       </button>
                       {iv.type === "Online" && (() => {
-                        const now = new Date();
                         const ivDate = new Date(iv.date);
                         const diffMins = (ivDate - now) / (1000 * 60);
                         const isActive = diffMins <= 10 && diffMins >= -(iv.duration || 60);

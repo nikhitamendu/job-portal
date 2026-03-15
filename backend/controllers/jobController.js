@@ -331,7 +331,32 @@ const updateJob = async (req, res) => {
 };
 
 
-module.exports = { createJob, getJobs, getJobById,getMyJobs,deleteJob,updateJob };
+/* ================= TOGGLE JOB STATUS (Open / Closed) ================= */
+const toggleJobStatus = async (req, res) => {
+  try {
+    const job = await Job.findOne({
+      _id: req.params.id,
+      postedBy: req.user._id
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    job.isActive = !job.isActive;
+    await job.save();
+
+    res.json({
+      message: `Job ${job.isActive ? "reopened" : "closed"} successfully`,
+      isActive: job.isActive
+    });
+  } catch (error) {
+    console.error("TOGGLE JOB STATUS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { createJob, getJobs, getJobById, getMyJobs, deleteJob, updateJob, toggleJobStatus };
 
 
 

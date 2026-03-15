@@ -151,7 +151,7 @@ const RecruiterInterviews = () => {
               {filter === "all" ? "No interviews scheduled yet" : `No ${filter} interviews`}
             </h3>
             <p className="text-slate-400 text-sm max-w-sm mx-auto mb-6">
-              Ready to meet your next star candidate? Go to the Applicants page and click the 📅 Schedule button on anyReviewed or Shortlisted applicant.
+              Ready to meet your next star candidate? Go to the Applicants page and click the 📅 Schedule button on any Reviewed or Shortlisted applicant.
             </p>
             <button 
               onClick={() => navigate("/recruiter/applicants")}

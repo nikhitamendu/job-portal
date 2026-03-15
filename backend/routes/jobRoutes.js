@@ -6,11 +6,19 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
-const { createJob,getJobs,getJobById,getMyJobs,deleteJob} = require("../controllers/jobController");   //save the job in db
+const { createJob, getJobs, getJobById, getMyJobs, deleteJob, toggleJobStatus } = require("../controllers/jobController");
 /* ================= GET ALL JOBS ================= */
 router.get("/", getJobs);   //any one access no login required  //used for home pages and job listing pages
 
-const {updateJob} = require("../controllers/jobController")
+const { updateJob } = require("../controllers/jobController");
+
+// Toggle job open/closed status
+router.patch(
+  "/:id/toggle",
+  auth,
+  authorizeRoles("recruiter"),
+  toggleJobStatus
+);
 
 //recruiter dashboard  protected
 router.get(
