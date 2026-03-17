@@ -51,8 +51,8 @@ const interviewEmailHtml = ({ candidateName, jobTitle, company, date, duration, 
             <tr><td style="padding:20px 24px;${notes ? "border-bottom:1px solid #e2e8f0;" : ""}">
               <p style="margin:0 0 4px;color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">${type === "Online" ? "Meeting Link" : "Location / Phone"}</p>
               ${type === "Online"
-                ? `<a href="${location}" style="color:#2563eb;font-size:15px;font-weight:600;word-break:break-all;">${location}</a>`
-                : `<p style="margin:0;color:#0f172a;font-size:15px;font-weight:600;">${location}</p>`}
+    ? `<a href="${location}" style="color:#2563eb;font-size:15px;font-weight:600;word-break:break-all;">${location}</a>`
+    : `<p style="margin:0;color:#0f172a;font-size:15px;font-weight:600;">${location}</p>`}
             </td></tr>
             ${notes ? `<tr><td style="padding:20px 24px;">
               <p style="margin:0 0 4px;color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Notes from Recruiter</p>
@@ -158,36 +158,36 @@ const scheduleInterview = async (req, res) => {
       message: "Interview scheduled successfully",
       interview
     });
-    
+
     // Notify Candidate + send email AFTER sending response (non-blocking)
     try {
-        const recruiter = await User.findById(req.user._id);
-        const absoluteLocation = location?.startsWith("http") ? location : `https://${location}`;
-        
-        await createNotification({
-          recipient: application.applicant._id,
-          sender: req.user._id,
-          type: "interview_scheduled",
-          message: `New Interview Scheduled! ${recruiter.companyName || recruiter.name} invited you for the "${application.job.title}" position on ${new Date(date).toLocaleString()}.`,
-          link: "/interviews",
-        });
-        // Send confirmation email to candidate
-        await sendEmail(
-          application.applicant.email,
-          `Interview Scheduled: ${application.job.title} at ${recruiter.companyName || recruiter.name}`,
-          interviewEmailHtml({
-            candidateName: application.applicant.name,
-            jobTitle: application.job.title,
-            company: recruiter.companyName || recruiter.name,
-            date,
-            duration: duration || 45,
-            type: type || "Online",
-            location: absoluteLocation,
-            notes,
-          })
-        );
+      const recruiter = await User.findById(req.user._id);
+      const absoluteLocation = location?.startsWith("http") ? location : `https://${location}`;
+
+      await createNotification({
+        recipient: application.applicant._id,
+        sender: req.user._id,
+        type: "interview_scheduled",
+        message: `New Interview Scheduled! ${recruiter.companyName || recruiter.name} invited you for the "${application.job.title}" position on ${new Date(date).toLocaleString()}.`,
+        link: "/interviews",
+      });
+      // Send confirmation email to candidate
+      await sendEmail(
+        application.applicant.email,
+        `Interview Scheduled: ${application.job.title} at ${recruiter.companyName || recruiter.name}`,
+        interviewEmailHtml({
+          candidateName: application.applicant.name,
+          jobTitle: application.job.title,
+          company: recruiter.companyName || recruiter.name,
+          date,
+          duration: duration || 45,
+          type: type || "Online",
+          location: absoluteLocation,
+          notes,
+        })
+      );
     } catch (notifErr) {
-        console.error("Failed to send notification/email:", notifErr);
+      console.error("Failed to send notification/email:", notifErr);
     }
 
   } catch (error) {
@@ -249,36 +249,36 @@ const updateInterviewStatus = async (req, res) => {
     if (status) {
       interview.status = status;
       await interview.save();
-      
+
       res.json({ message: "Interview updated", interview });
 
       // Notify the other party + send email to candidate AFTER sending response
       try {
-          const recipient = isRecruiter ? interview.candidate : interview.recruiter;
-          await createNotification({
-            recipient,
-            sender: req.user._id,
-            type: "interview_update",
-            message: `Interview Status Update: The interview for "${interview.title}" is now marked as ${status}.`,
-            link: "/interviews",
-          });
-          // Email the candidate about the status change
-          const populatedInterview = await Interview.findById(interview._id)
-            .populate("candidate", "name email")
-            .populate("job", "title");
-          if (populatedInterview?.candidate?.email) {
-            await sendEmail(
-              populatedInterview.candidate.email,
-              `Interview Update: ${populatedInterview.job?.title || "Your Interview"} — ${status}`,
-              statusUpdateEmailHtml({
-                candidateName: populatedInterview.candidate.name,
-                jobTitle: populatedInterview.job?.title || "your position",
-                status,
-              })
-            );
-          }
+        const recipient = isRecruiter ? interview.candidate : interview.recruiter;
+        await createNotification({
+          recipient,
+          sender: req.user._id,
+          type: "interview_update",
+          message: `Interview Status Update: The interview for "${interview.title}" is now marked as ${status}.`,
+          link: "/interviews",
+        });
+        // Email the candidate about the status change
+        const populatedInterview = await Interview.findById(interview._id)
+          .populate("candidate", "name email")
+          .populate("job", "title");
+        if (populatedInterview?.candidate?.email) {
+          await sendEmail(
+            populatedInterview.candidate.email,
+            `Interview Update: ${populatedInterview.job?.title || "Your Interview"} — ${status}`,
+            statusUpdateEmailHtml({
+              candidateName: populatedInterview.candidate.name,
+              jobTitle: populatedInterview.job?.title || "your position",
+              status,
+            })
+          );
+        }
       } catch (notifErr) {
-          console.error("Failed to send notification/email:", notifErr);
+        console.error("Failed to send notification/email:", notifErr);
       }
       return;
     }

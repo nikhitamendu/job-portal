@@ -1,87 +1,4 @@
-// import { useState, useEffect } from "react";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import api from "../services/api";
 
-// export default function ResetPassword() {
-//   const [password, setPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const email = location.state?.email;
-
-//   useEffect(() => {
-//     if (!email) navigate("/forgot-password");
-//   }, [email, navigate]);
-
-//   const resetPassword = async (e) => {
-//     e.preventDefault();
-
-//     if (password !== confirmPassword) {
-//       toast.error("Passwords do not match");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       await api.post("/auth/reset-password", { email, password });
-//       //POST http://localhost:5000/api/auth/reset-password
-// // Content-Type: application/json
-//       toast.success("Password reset successful");
-//       navigate("/login");
-//     } catch (err) {
-//       toast.error(
-//         err.response?.data?.message || "Failed to reset password"
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">
-//       <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-gray-200 p-6">
-        
-//         <h2 className="text-2xl font-bold text-center mb-4">
-//           Set New Password
-//         </h2>
-
-//         <form onSubmit={resetPassword} className="space-y-4">
-//           <input
-//             type="password"
-//             placeholder="New password"
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             required
-//             className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-//           />
-
-//           <input
-//             type="password"
-//             placeholder="Confirm password"
-//             value={confirmPassword}
-//             onChange={(e) => setConfirmPassword(e.target.value)}
-//             required
-//             className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-//           />
-
-//           <button
-//             disabled={loading}
-//             className={`w-full py-2 rounded-md font-medium text-white ${
-//               loading
-//                 ? "bg-gray-400 cursor-not-allowed"
-//                 : "bg-blue-600 hover:bg-blue-700"
-//             }`}
-//           >
-//             {loading ? "Resetting..." : "Reset Password"}
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -106,16 +23,16 @@ export default function ResetPassword() {
   const getStrength = (pw) => {
     if (!pw) return { score: 0, label: "", color: "" };
     let score = 0;
-    if (pw.length >= 8)              score++;
-    if (/[A-Z]/.test(pw))            score++;
-    if (/[0-9]/.test(pw))            score++;
-    if (/[^A-Za-z0-9]/.test(pw))     score++;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
     const map = [
-      { label: "Too short",  color: "bg-red-500"    },
-      { label: "Weak",       color: "bg-red-400"    },
-      { label: "Fair",       color: "bg-amber-400"  },
-      { label: "Good",       color: "bg-blue-500"   },
-      { label: "Strong",     color: "bg-emerald-500"},
+      { label: "Too short", color: "bg-red-500" },
+      { label: "Weak", color: "bg-red-400" },
+      { label: "Fair", color: "bg-amber-400" },
+      { label: "Good", color: "bg-blue-500" },
+      { label: "Strong", color: "bg-emerald-500" },
     ];
     return { score, ...map[score] };
   };
@@ -155,7 +72,7 @@ export default function ResetPassword() {
           <div className="absolute bottom-10 left-0 w-48 h-48 rounded-full bg-indigo-600/10 blur-2xl pointer-events-none" />
           {/* grid */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage:"linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize:"44px 44px" }} />
+            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "44px 44px" }} />
 
           <div className="relative z-10 space-y-6">
 
@@ -184,9 +101,9 @@ export default function ResetPassword() {
             {/* Steps — all done */}
             <div className="space-y-3">
               {[
-                ["Entered your email",         true ],
-                ["Verified the OTP",           true ],
-                ["Set your new password",       false],
+                ["Entered your email", true],
+                ["Verified the OTP", true],
+                ["Set your new password", false],
               ].map(([label, done], i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold flex-shrink-0
@@ -207,7 +124,7 @@ export default function ResetPassword() {
             {/* Tips */}
             <div className="bg-white/6 border border-white/10 rounded-xl p-3.5 max-w-xs space-y-1.5">
               <p className="text-xs font-bold text-white/55 uppercase tracking-wider">Strong password tips</p>
-              {["At least 8 characters","Mix uppercase & lowercase","Include numbers","Add special characters (!@#$)"].map((t,i) => (
+              {["At least 8 characters", "Mix uppercase & lowercase", "Include numbers", "Add special characters (!@#$)"].map((t, i) => (
                 <p key={i} className="text-xs text-white/40">· {t}</p>
               ))}
             </div>
@@ -262,15 +179,14 @@ export default function ResetPassword() {
                 {password && (
                   <div className="mt-2 space-y-1">
                     <div className="flex gap-1">
-                      {[1,2,3,4].map(i => (
+                      {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= strength.score ? strength.color : "bg-slate-200"}`} />
                       ))}
                     </div>
-                    <p className={`text-xs font-semibold ${
-                      strength.score <= 1 ? "text-red-500" :
-                      strength.score === 2 ? "text-amber-500" :
-                      strength.score === 3 ? "text-blue-500" : "text-emerald-500"
-                    }`}>
+                    <p className={`text-xs font-semibold ${strength.score <= 1 ? "text-red-500" :
+                        strength.score === 2 ? "text-amber-500" :
+                          strength.score === 3 ? "text-blue-500" : "text-emerald-500"
+                      }`}>
                       {strength.label}
                     </p>
                   </div>
@@ -290,9 +206,9 @@ export default function ResetPassword() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     className={`w-full px-3.5 py-2.5 pr-10 text-sm rounded-lg border bg-slate-50 text-slate-900 outline-none transition-all focus:ring-3
-                      ${passwordsMatch    ? "border-emerald-400 focus:border-emerald-500 focus:ring-emerald-100" :
+                      ${passwordsMatch ? "border-emerald-400 focus:border-emerald-500 focus:ring-emerald-100" :
                         passwordsMismatch ? "border-red-400 focus:border-red-500 focus:ring-red-100" :
-                        "border-slate-200 focus:border-blue-600 focus:ring-blue-100 focus:bg-white"}`}
+                          "border-slate-200 focus:border-blue-600 focus:ring-blue-100 focus:bg-white"}`}
                   />
                   <button
                     type="button"

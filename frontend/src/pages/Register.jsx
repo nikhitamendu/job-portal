@@ -1,184 +1,4 @@
 
-// import { useState } from "react";
-// import { Link } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import api from "../services/api";
-
-// export default function Register() {
-//   const [form, setForm] = useState({
-//     name: "",
-//     email: "",
-//     password: "",
-//     role: "user"   // ✅ default role
-//   });
-
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [error, setError] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//     setError("");
-//   };
-
-//   const submit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-
-//     try {
-//       setLoading(true);
-//       // const res = await api.post("/auth/register", form);
-//       // toast.success(res.data.message);
-//       // setForm({ name: "", email: "", password: "", role: "user" });
-//       const res = await api.post("/auth/register", form);
-
-//       toast.success("OTP sent to your email");
-
-//       // redirect to OTP verification page
-//       window.location.href = `/verify-success?email=${form.email}`;
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//         "Registration failed. Please try again."
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4">
-//       <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-gray-200 p-6">
-
-//         {/* HEADER */}
-//         <div className="text-center mb-6">
-//           <h2 className="text-2xl font-bold text-gray-800">
-//             Create your account 🚀
-//           </h2>
-//           <p className="text-sm text-gray-500 mt-1">
-//             Register to start your journey
-//           </p>
-//         </div>
-
-//         {/* FORM */}
-//         <form onSubmit={submit} className="space-y-4">
-
-//           {/* ROLE SELECT */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">
-//               Register As
-//             </label>
-//             <select
-//               name="role"
-//               value={form.role}
-//               onChange={handleChange}
-//               className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-//             >
-//               <option value="user">Job Seeker</option>
-//               <option value="recruiter">Recruiter</option>
-//             </select>
-//           </div>
-
-//           {/* NAME */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">
-//               Full Name
-//             </label>
-//             <input
-//               type="text"
-//               name="name"
-//               placeholder="John Doe"
-//               value={form.name}
-//               onChange={handleChange}
-//               required
-//               className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-//             />
-//           </div>
-
-//           {/* EMAIL */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">
-//               Email
-//             </label>
-//             <input
-//               type="email"
-//               name="email"
-//               placeholder="you@example.com"
-//               value={form.email}
-//               onChange={handleChange}
-//               required
-//               className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-//             />
-//           </div>
-
-//           {/* PASSWORD */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-1">
-//               Password
-//             </label>
-
-//             <div className="relative">
-//               <input
-//                 type={showPassword ? "text" : "password"}
-//                 name="password"
-//                 placeholder="••••••••"
-//                 value={form.password}
-//                 onChange={handleChange}
-//                 required
-//                 className="w-full border rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
-//               />
-
-//               <button
-//                 type="button"
-//                 onClick={() => setShowPassword(!showPassword)}
-//                 className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700"
-//               >
-//                 {showPassword ? "🙈" : "👁️"}
-//               </button>
-//             </div>
-
-//             <p className="text-xs text-gray-500 mt-1">
-//               Must contain 1 uppercase, 1 number & 1 special character
-//             </p>
-//           </div>
-
-//           {error && (
-//             <p className="text-sm text-red-600 text-center">
-//               {error}
-//             </p>
-//           )}
-
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className={`w-full py-2 rounded-md font-medium text-white transition ${loading
-//                 ? "bg-gray-400 cursor-not-allowed"
-//                 : "bg-blue-600 hover:bg-blue-700"
-//               }`}
-//           >
-//             {/* {loading
-//               ? "Sending verification email..."
-//               : "Register"} */}
-//               {loading
-//   ? "Sending OTP..."
-//   : "Register"}
-//           </button>
-//         </form>
-
-//         {/* FOOTER */}
-//         <div className="text-center mt-4 text-sm text-gray-600">
-//           Already have an account?{" "}
-//           <Link
-//             to="/login"
-//             className="text-blue-600 hover:underline font-medium"
-//           >
-//             Login
-//           </Link>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
 // //When a user registers, the frontend sends form data to the backend. Instead of immediately creating an account, the backend stores the user in a temporary collection and sends a verification email. Once the user clicks the verification link, the record is moved to the main user collection and the account becomes active.
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -230,8 +50,8 @@ export default function Register() {
   const strength = getStrength(form.password);
   const strengthMeta = [
     null,
-    { label: "Weak",   barColor: "bg-red-500",    text: "text-red-500"     },
-    { label: "Good",   barColor: "bg-amber-400",   text: "text-amber-500"   },
+    { label: "Weak", barColor: "bg-red-500", text: "text-red-500" },
+    { label: "Good", barColor: "bg-amber-400", text: "text-amber-500" },
     { label: "Strong", barColor: "bg-emerald-500", text: "text-emerald-600" },
   ];
 
@@ -363,8 +183,8 @@ export default function Register() {
             {/* Role Toggle */}
             <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl mb-5">
               {[
-                { value: "user",      label: "🎯 Job Seeker" },
-                { value: "recruiter", label: "🏢 Recruiter"  },
+                { value: "user", label: "🎯 Job Seeker" },
+                { value: "recruiter", label: "🏢 Recruiter" },
               ].map((r) => (
                 <button
                   key={r.value}
@@ -447,11 +267,10 @@ export default function Register() {
                       {[1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-                            i <= strength
+                          className={`flex-1 h-1 rounded-full transition-all duration-300 ${i <= strength
                               ? strengthMeta[strength]?.barColor
                               : "bg-slate-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
