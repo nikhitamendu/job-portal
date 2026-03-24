@@ -114,7 +114,7 @@ export default function VerifyReset() {
               </h2>
             </div>
 
-            {/* Sub */}
+            {/* Sub */}z
             <p className="text-sm text-white/50 leading-relaxed max-w-xs">
               We sent a 6-digit one-time password to{" "}
               <span className="text-white/75 font-semibold break-all">{email}</span>.

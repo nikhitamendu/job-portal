@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const TempUser = require("../models/TempUser");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken"); // ✅ FIXED
+const jwt = require("jsonwebtoken"); 
 const sendEmail = require("../utils/sendEmail");
 
 exports.register = async (req, res) => {
@@ -192,7 +192,7 @@ const generateTokens = (user) => {
 
   const refreshToken = jwt.sign(
     { id: user._id },
-    process.env.JWT_REFRESH_SECRET, // ✅ MUST exist in .env
+    process.env.JWT_REFRESH_SECRET, 
     { expiresIn: "7d" }
   );
 

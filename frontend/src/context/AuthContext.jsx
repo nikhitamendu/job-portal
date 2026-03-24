@@ -45,7 +45,8 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null);
     setUser(null);
   };  //remove token and user
-//“When the app first opens, should the user still be logged in or not?”
+//“When the app first opens, should the user still be logged in or not?” 
+//auto login
   useEffect(() => {
     const initAuth = async () => {
       const refreshed = await tryRefresh();
