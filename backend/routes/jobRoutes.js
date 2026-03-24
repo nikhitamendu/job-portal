@@ -18,7 +18,7 @@ router.patch(
   auth,
   authorizeRoles("recruiter"),
   toggleJobStatus
-);
+);k
 
 //recruiter dashboard  protected
 router.get(

@@ -64,7 +64,7 @@ const checkIfApplied = async (req, res) => {
     console.error("CHECK APPLIED ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
-};
+}; //used in job details application.findIne({job,applicant})
 
 /* ================= GET MY APPLICATIONS ================= */
 const getMyApplications = async (req, res) => {
@@ -85,8 +85,8 @@ const getMyApplications = async (req, res) => {
   }
 };
 
-/* ================= GET APPLICANTS FOR A JOB ================= */
-const getApplicantsForJob = async (req, res) => {
+/* ================= GET APPLICANTS FOR A JOB  for specific================= */
+const getApplicantsForJob = async (req, res) => {  //recruiter
   try {
     const { jobId } = req.params;
 
@@ -97,7 +97,7 @@ const getApplicantsForJob = async (req, res) => {
 
     const applications = await Application.find({ job: jobId })
       .populate("applicant", "name email phone bio jobTitle city country skills experience education resumeFileId linkedin portfolio")
-      .populate("job", "title")
+      .populate("job", "title")  //recruiter can view full details of user
       .sort({ createdAt: -1 });
 
     res.json(applications);
@@ -120,6 +120,7 @@ const updateApplicationStatus = async (req, res) => {
     }
 
     if (application.job.postedBy.toString() !== req.user._id.toString()) {
+      //👉 Only the recruiter who posted the job can update status
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -136,7 +137,7 @@ const updateApplicationStatus = async (req, res) => {
       return res.status(400).json({
         message: `Cannot change status from ${application.status} to ${status}`,
       });
-    }
+    } //Cannot change status from Applied to Offer
 
     application.statusHistory.push({ status, changedAt: new Date() });
     application.status = status;

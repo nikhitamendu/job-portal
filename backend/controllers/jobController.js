@@ -49,7 +49,7 @@ const createJob = async (req, res) => {
 
     // --- Automatic Matching Logic ---
     try {
-      const recruiter = await User.findById(req.user._id);
+      const recruiter = await User.findById(req.user._id); //to know who posted the job
       if (job.skillsRequired && job.skillsRequired.length > 0) {
         // Find users with role "user" who have at least ONE matching skill
         const matchingUsers = await User.find({
@@ -57,7 +57,7 @@ const createJob = async (req, res) => {
           skills: { $in: job.skillsRequired.map(s => s.toLowerCase()) }
         });
         console.log(`Matching logic: Found ${matchingUsers.length} users with skills: ${job.skillsRequired}`);
-
+//for sending notification~~
         for (const user of matchingUsers) {
           console.log(`Sending match alert to: ${user.email}`);
           // Send In-app Notification
@@ -168,7 +168,7 @@ const getJobs = async (req, res) => {
     }
 
     // 📅 Date posted filter
-    if (req.query.datePosted) {
+    if (req.query.datePosted) {  ///jobs?datePosted=week
       const now = new Date();
       let dateLimit;
       if (req.query.datePosted === "today") dateLimit = new Date(now.setDate(now.getDate() - 1));
@@ -182,7 +182,7 @@ const getJobs = async (req, res) => {
     }
 
     // 📄 Pagination
-    const skip = (page - 1) * limit;  //10 per page
+    const skip = (page - 1) * limit;  
 
     // 🔃 Sorting
     let sortOption = { createdAt: -1 }; // default newest
