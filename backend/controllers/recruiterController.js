@@ -21,7 +21,7 @@ exports.searchCandidates = async (req, res) => {
 
     const candidates = await User.find(query)
       .select("name email jobTitle skills city country experience education profilePicFileId")
-      .limit(50);
+      .limit(50); //"I limit returned fields to improve performance and reduce payload size."
 
     res.json({
       success: true,
@@ -82,7 +82,7 @@ exports.sendEmailToCandidate = async (req, res) => {
 
     await sendEmail(candidate.email, subject, emailHtml);
     const { createNotification } = require("./notificationController");
-    await createNotification({
+    await createNotification({   //for app notifications
       recipient: candidate._id,
       sender: recruiter._id,
       type: "outreach",

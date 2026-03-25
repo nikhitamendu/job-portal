@@ -59,6 +59,7 @@ export default function RecruiterApplicants() {
   const fetchApplicants = async () => {
     try {
       const { data } = await api.get("/applications/recruiter/all");
+      //getches all applications and across all recruiter jobs
       setApplications(data);
     } catch (err) {
       console.error(err);

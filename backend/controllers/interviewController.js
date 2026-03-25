@@ -129,7 +129,7 @@ const scheduleInterview = async (req, res) => {
     }
 
     // Ensure only the recruiter of the job can schedule
-    if (application.job.postedBy.toString() !== req.user._id.toString()) {
+    if (application.job.postedBy.toString() !== req.user._id.toString()) {//only recruitre can schedule 
       return res.status(403).json({ message: "Unauthorized to schedule for this job" });
     }
 
@@ -151,7 +151,7 @@ const scheduleInterview = async (req, res) => {
       applicationId,
       { status: "Interview" },
       { new: true }
-    );
+    );  // automaticall move to interview stage
     console.log("Updated Application status to Interview:", updatedApp?.status);
 
     res.status(201).json({

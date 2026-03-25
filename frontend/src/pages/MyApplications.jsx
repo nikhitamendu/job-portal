@@ -71,6 +71,7 @@ const MyApplications = () => {
   const counts = useMemo(() => {
     const c = { All: applications.length, Applied: 0, Reviewed: 0, Shortlisted: 0, Interview: 0, Offer: 0, Rejected: 0 };
     applications.forEach(a => { if (c[a.status] !== undefined) c[a.status]++; });
+    //checks if status exist in objuect                if exists increase count
     return c;
   }, [applications]);
 
