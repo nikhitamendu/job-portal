@@ -212,6 +212,10 @@ exports.login = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
+    console.log("Login email:", normalizedEmail);
+    console.log("User from DB:", user);
+
+
     const tempUser = await TempUser.findOne({ email: normalizedEmail });
 
     if (!user && tempUser) {
@@ -233,6 +237,7 @@ exports.login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch);
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
